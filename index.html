@@ -20,129 +20,164 @@
 </head>
 <body>
 
-    <nav class="navbar text-white px-6 py-4 flex justify-between items-center mb-8 shadow-xl">
-        <div class="flex items-center gap-4">
-            <span class="text-2xl">📊</span>
-            <span class="font-bold text-lg tracking-wider uppercase">Painel de Controle de Obras</span>
+<nav class="navbar text-white px-6 py-4 flex justify-between items-center mb-8 shadow-xl">
+    <div class="flex items-center gap-4">
+        <span class="text-2xl">📊</span>
+        <span class="font-bold text-lg tracking-wider uppercase">Painel de Controle de Obras</span>
+    </div>
+    <div class="hidden sm:block text-xs font-medium bg-blue-800 px-3 py-1 rounded-full border border-blue-400/30">
+        Status: <span class="text-green-400">● Online</span>
+    </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-6">
+    <div class="mb-10 flex justify-between items-end">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Portfólio Ativo</h1>
+            <div class="h-1 w-20 bg-blue-600 mt-1"></div>
         </div>
-        <div class="hidden sm:block text-xs font-medium bg-blue-800 px-3 py-1 rounded-full border border-blue-400/30">
-            Status: <span class="text-green-400">● Online</span>
-        </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="mb-10 flex justify-between items-end">
-            <div>
-                <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Portfólio Ativo</h1>
-                <div class="h-1 w-20 bg-blue-600 mt-1"></div>
-            </div>
-            <div class="text-slate-400 text-xs font-bold uppercase tracking-widest">
-                Atualização em tempo real
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
-                <div class="relative h-44">
-                    <img src="https://iili.io/flIvyTF.png" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                    <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-lg">Em Execução</span>
-                </div>
-                <div class="p-6">
-                    <h3 class="font-bold text-slate-800 text-lg mb-4 h-12">Gerdau - Mogi das Cruzes</h3>
-                    <div class="mb-6">
-                        <div class="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">
-                            <span>Avanço Realizado</span>
-                            <span id="gerdau-perc-txt" class="text-blue-600 font-black text-sm">0.00%</span>
-                        </div>
-                        <div class="progress-bar-bg"><div id="gerdau-bar" class="progress-bar-fill" style="width: 0%"></div></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 border-t pt-4 border-slate-50">
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">HH Real Acum.</span>
-                            <span id="gerdau-hh" class="text-sm font-black text-slate-700">---</span>
-                        </div>
-                        <div id="gerdau-prod-box" class="bg-slate-50 p-3 rounded-xl border border-slate-100 border-l-4 border-l-orange-400">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Produtividade</span>
-                            <span id="gerdau-prod" class="text-sm font-black text-slate-700">---</span>
-                        </div>
-                    </div>
-                    <a href="https://ricardoprf.github.io/Painel-Bordo-Gerdau/" class="mt-6 block text-center bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-md">Detalhes do Projeto</a>
-                </div>
-            </div>
-
-            <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
-                <div class="relative h-44">
-                    <img src="https://i.imgur.com/yEp1ee7.png" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                    <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-lg">Em Execução</span>
-                </div>
-                <div class="p-6">
-                    <h3 class="font-bold text-slate-800 text-lg mb-4 h-12">Klabin Linha 07 - Andritz</h3>
-                    <div class="mb-6">
-                        <div class="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">
-                            <span>Avanço Realizado</span>
-                            <span id="andritz-perc-txt" class="text-blue-600 font-black text-sm">0.00%</span>
-                        </div>
-                        <div class="progress-bar-bg"><div id="andritz-bar" class="progress-bar-fill" style="width: 0%"></div></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 border-t pt-4 border-slate-50">
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">HH Real Acum.</span>
-                            <span id="andritz-hh" class="text-sm font-black text-slate-700">---</span>
-                        </div>
-                        <div id="andritz-prod-box" class="bg-slate-50 p-3 rounded-xl border border-slate-100 border-l-4 border-l-orange-400">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Produtividade</span>
-                            <span id="andritz-prod" class="text-sm font-black text-slate-700">---</span>
-                        </div>
-                    </div>
-                    <a href="https://ricardoprf.github.io/Painel-de-Bordo-Andritz/" class="mt-6 block text-center bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-md">Detalhes do Projeto</a>
-                </div>
-            </div>
-
+        <div class="text-slate-400 text-xs font-bold uppercase tracking-widest">
+            Atualização em tempo real
         </div>
     </div>
 
-    <script>
-        const configs = {
-            gerdau: { apiKey: "AIzaSyCfybt3i0VMxIyA9p1bPh8jNIptY-KnosI", databaseURL: "https://painel-de-bordo-gerdau-default-rtdb.firebaseio.com" },
-            andritz: { apiKey: "AIzaSyAW35OKtqp0sp6vBgC3QsDyB31nfO6gQyo", databaseURL: "https://painel-de-bordo-3f96a-default-rtdb.firebaseio.com" }
-        };
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-        function iniciarConexao(id, config) {
-            const app = firebase.initializeApp(config, id);
-            const db = app.database();
+        <!-- GERDAU -->
+        <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
+            <div class="relative h-44">
+                <img src="https://iili.io/flIvyTF.png" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-lg">Em Execução</span>
+            </div>
+            <div class="p-6">
+                <h3 class="font-bold text-slate-800 text-lg mb-4 h-12">Gerdau - Mogi das Cruzes</h3>
+                <div class="mb-6">
+                    <div class="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">
+                        <span>Avanço Realizado</span>
+                        <span id="gerdau-perc-txt" class="text-blue-600 font-black text-sm">0.00%</span>
+                    </div>
+                    <div class="progress-bar-bg"><div id="gerdau-bar" class="progress-bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 border-t pt-4 border-slate-50">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">HH Real Acum.</span>
+                        <span id="gerdau-hh" class="text-sm font-black text-slate-700">---</span>
+                    </div>
+                    <div id="gerdau-prod-box" class="bg-slate-50 p-3 rounded-xl border border-slate-100 border-l-4 border-l-orange-400">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Produtividade</span>
+                        <span id="gerdau-prod" class="text-sm font-black text-slate-700">---</span>
+                    </div>
+                </div>
+                <a href="https://ricardoprf.github.io/Painel-Bordo-Gerdau/" class="mt-6 block text-center bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-md">Detalhes do Projeto</a>
+            </div>
+        </div>
 
-            db.ref('painel').on('value', snap => {
-                const data = snap.val();
-                if(!data) return;
+        <!-- ANDRITZ -->
+        <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
+            <div class="relative h-44">
+                <img src="https://i.imgur.com/yEp1ee7.png" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-lg">Em Execução</span>
+            </div>
+            <div class="p-6">
+                <h3 class="font-bold text-slate-800 text-lg mb-4 h-12">Klabin Linha 07 - Andritz</h3>
+                <div class="mb-6">
+                    <div class="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">
+                        <span>Avanço Realizado</span>
+                        <span id="andritz-perc-txt" class="text-blue-600 font-black text-sm">0.00%</span>
+                    </div>
+                    <div class="progress-bar-bg"><div id="andritz-bar" class="progress-bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 border-t pt-4 border-slate-50">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">HH Real Acum.</span>
+                        <span id="andritz-hh" class="text-sm font-black text-slate-700">---</span>
+                    </div>
+                    <div id="andritz-prod-box" class="bg-slate-50 p-3 rounded-xl border border-slate-100 border-l-4 border-l-orange-400">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Produtividade</span>
+                        <span id="andritz-prod" class="text-sm font-black text-slate-700">---</span>
+                    </div>
+                </div>
+                <a href="https://ricardoprf.github.io/Painel-de-Bordo-Andritz/" class="mt-6 block text-center bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-md">Detalhes do Projeto</a>
+            </div>
+        </div>
 
-                const hhContrato = parseFloat(data.config?.hh) || 0;
-                const avancoRealAcm = (data.curva || []).reduce((acc, curr) => acc + (parseFloat(curr.Avanco_Realizado_Perc) || 0), 0);
-                const hhRealAcm = (data.hh || []).reduce((acc, curr) => acc + (parseFloat(curr.HH_Real) || 0), 0);
-                const prodAcm = hhRealAcm > 0 ? ((avancoRealAcm * hhContrato) / hhRealAcm) * 100 : 0;
+        <!-- SYNGENTA -->
+        <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
+            <div class="relative h-44">
+                <img src="https://i.imgur.com/GGdzIJ0.png" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-lg">Em Execução</span>
+            </div>
+            <div class="p-6">
+                <h3 class="font-bold text-slate-800 text-lg mb-4 h-12">Syngenta – Projeto Industrial</h3>
+                <div class="mb-6">
+                    <div class="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">
+                        <span>Avanço Realizado</span>
+                        <span id="syngenta-perc-txt" class="text-blue-600 font-black text-sm">0.00%</span>
+                    </div>
+                    <div class="progress-bar-bg"><div id="syngenta-bar" class="progress-bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 border-t pt-4 border-slate-50">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">HH Real Acum.</span>
+                        <span id="syngenta-hh" class="text-sm font-black text-slate-700">---</span>
+                    </div>
+                    <div id="syngenta-prod-box" class="bg-slate-50 p-3 rounded-xl border border-slate-100 border-l-4 border-l-orange-400">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Produtividade</span>
+                        <span id="syngenta-prod" class="text-sm font-black text-slate-700">---</span>
+                    </div>
+                </div>
+                <a href="https://ricardoprf.github.io/Painel-de-Bordo-Syngenta/" class="mt-6 block text-center bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-md">Detalhes do Projeto</a>
+            </div>
+        </div>
 
-                document.getElementById(`${id}-perc-txt`).innerText = (avancoRealAcm * 100).toFixed(2) + "%";
-                document.getElementById(`${id}-bar`).style.width = (avancoRealAcm * 100) + "%";
-                document.getElementById(`${id}-hh`).innerText = hhRealAcm.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-                
-                const prodEl = document.getElementById(`${id}-prod`);
-                const prodBox = document.getElementById(`${id}-prod-box`);
-                prodEl.innerText = prodAcm.toFixed(1) + "%";
-                
-                if(prodAcm < 100) {
-                    prodEl.className = "text-sm font-black text-red-600";
-                    prodBox.style.borderLeftColor = "#ef4444";
-                } else {
-                    prodEl.className = "text-sm font-black text-green-600";
-                    prodBox.style.borderLeftColor = "#10b981";
-                }
-            });
+    </div>
+</div>
+
+<script>
+const configs = {
+    gerdau: { apiKey: "AIzaSyCfybt3i0VMxIyA9p1bPh8jNIptY-KnosI", databaseURL: "https://painel-de-bordo-gerdau-default-rtdb.firebaseio.com" },
+    andritz: { apiKey: "AIzaSyAW35OKtqp0sp6vBgC3QsDyB31nfO6gQyo", databaseURL: "https://painel-de-bordo-3f96a-default-rtdb.firebaseio.com" },
+    syngenta: { apiKey: "AIzaSyDudKMEQkRaL99W3ijjlH--fPvsvdJth_0", databaseURL: "https://painel-de-bordo-syngenta-default-rtdb.firebaseio.com" }
+};
+
+function iniciarConexao(id, config) {
+    const app = firebase.initializeApp(config, id);
+    const db = app.database();
+
+    db.ref('painel').on('value', snap => {
+        const data = snap.val();
+        if(!data) return;
+
+        const hhContrato = parseFloat(data.config?.hh) || 0;
+        const avancoRealAcm = (data.curva || []).reduce((a,c)=>a+(parseFloat(c.Avanco_Realizado_Perc)||0),0);
+        const hhRealAcm = (data.hh || []).reduce((a,c)=>a+(parseFloat(c.HH_Real)||0),0);
+        const prodAcm = hhRealAcm > 0 ? ((avancoRealAcm * hhContrato) / hhRealAcm) * 100 : 0;
+
+        document.getElementById(`${id}-perc-txt`).innerText = (avancoRealAcm * 100).toFixed(2) + "%";
+        document.getElementById(`${id}-bar`).style.width = (avancoRealAcm * 100) + "%";
+        document.getElementById(`${id}-hh`).innerText = hhRealAcm.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+        const prodEl = document.getElementById(`${id}-prod`);
+        const prodBox = document.getElementById(`${id}-prod-box`);
+        prodEl.innerText = prodAcm.toFixed(1) + "%";
+
+        if(prodAcm < 100) {
+            prodEl.className = "text-sm font-black text-red-600";
+            prodBox.style.borderLeftColor = "#ef4444";
+        } else {
+            prodEl.className = "text-sm font-black text-green-600";
+            prodBox.style.borderLeftColor = "#10b981";
         }
+    });
+}
 
-        iniciarConexao('gerdau', configs.gerdau);
-        iniciarConexao('andritz', configs.andritz);
-    </script>
+iniciarConexao('gerdau', configs.gerdau);
+iniciarConexao('andritz', configs.andritz);
+iniciarConexao('syngenta', configs.syngenta);
+</script>
+
 </body>
 </html>
