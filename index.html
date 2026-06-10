@@ -103,7 +103,7 @@
             </div>
         </div>
 
-        <!-- SYNGENTA -->
+        <!-- FS BECCS -->
         <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
             <div class="relative h-44">
                 <img src="https://i.imgur.com/T4v4MKt.png" class="w-full h-full object-cover">
@@ -138,40 +138,153 @@
 
 <script>
 const configs = {
-    gerdau: { apiKey: "AIzaSyCfybt3i0VMxIyA9p1bPh8jNIptY-KnosI", databaseURL: "https://painel-de-bordo-gerdau-default-rtdb.firebaseio.com" },
-    andritz: { apiKey: "AIzaSyAW35OKtqp0sp6vBgC3QsDyB31nfO6gQyo", databaseURL: "https://painel-de-bordo-3f96a-default-rtdb.firebaseio.com" },
-    syngenta: { apiKey: "AIzaSyDudKMEQkRaL99W3ijjlH--fPvsvdJth_0", databaseURL: "https://painel-de-bordo-syngenta-default-rtdb.firebaseio.com" }
+    gerdau: {
+        apiKey: "AIzaSyCfybt3i0VMxIyA9p1bPh8jNIptY-KnosI",
+        databaseURL: "https://painel-de-bordo-gerdau-default-rtdb.firebaseio.com"
+    },
+    andritz: {
+        apiKey: "AIzaSyAW35OKtqp0sp6vBgC3QsDyB31nfO6gQyo",
+        databaseURL: "https://painel-de-bordo-3f96a-default-rtdb.firebaseio.com"
+    },
+    syngenta: {
+        // FS Fueling Sustainability — Projeto Beccs
+        apiKey: "AIzaSyCy7V9drbdlzkE28zmWv2MXOqdIxDl-bak",
+        authDomain: "painel-de-bordo-fs-beccs.firebaseapp.com",
+        databaseURL: "https://painel-de-bordo-fs-beccs-default-rtdb.firebaseio.com",
+        projectId: "painel-de-bordo-fs-beccs",
+        storageBucket: "painel-de-bordo-fs-beccs.firebasestorage.app",
+        messagingSenderId: "1022297952334",
+        appId: "1:1022297952334:web:7ec790b7abdc65a620331f"
+    }
 };
 
+function numeroPlanilha(valor) {
+    if (valor === null || valor === undefined || valor === '') return 0;
+    if (typeof valor === 'number') return Number.isFinite(valor) ? valor : 0;
+    let txt = String(valor).trim();
+    if (!txt || txt === '-') return 0;
+    const negativo = /^\(.*\)$/.test(txt);
+    txt = txt.replace(/[()]/g, '').replace(/%/g, '').replace(/\s/g, '');
+    if (txt.includes(',')) txt = txt.replace(/\./g, '').replace(',', '.');
+    const n = parseFloat(txt);
+    return Number.isFinite(n) ? (negativo ? -n : n) : 0;
+}
+
+function valorPercentual(valor) {
+    const txt = String(valor ?? '');
+    const n = numeroPlanilha(valor);
+    return txt.includes('%') ? n / 100 : n;
+}
+
+function formatPerc(v, casas=2) {
+    return (Number(v || 0) * 100).toFixed(casas) + "%";
+}
+
+function formatHH(v) {
+    return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function atualizarCard(id, avancoRealAcm, hhRealAcm, prodAcm) {
+    const perc = Math.max(0, avancoRealAcm || 0);
+    document.getElementById(`${id}-perc-txt`).innerText = formatPerc(perc, 2);
+    document.getElementById(`${id}-bar`).style.width = Math.min(100, perc * 100) + "%";
+    document.getElementById(`${id}-hh`).innerText = formatHH(hhRealAcm);
+
+    const prodEl = document.getElementById(`${id}-prod`);
+    const prodBox = document.getElementById(`${id}-prod-box`);
+    prodEl.innerText = Number(prodAcm || 0).toFixed(1) + "%";
+
+    if ((prodAcm || 0) < 100) {
+        prodEl.className = "text-sm font-black text-red-600";
+        prodBox.style.borderLeftColor = "#ef4444";
+    } else {
+        prodEl.className = "text-sm font-black text-green-600";
+        prodBox.style.borderLeftColor = "#10b981";
+    }
+}
+
+function calcularResumoPainel(data) {
+    const cfg = data.config || {};
+    const disciplinasCfg = cfg.disciplinas || {};
+    const dadosPorDisciplina = data.dados || null;
+
+    // Estrutura nova do Painel FS/Gerdau: painel/dados/{disciplina}/curva e painel/dados/{disciplina}/hh
+    if (dadosPorDisciplina && typeof dadosPorDisciplina === 'object') {
+        let hhContratoTotal = 0;
+        let hhContratoComCurva = 0;
+        let hhAgregadoTotal = 0;
+        let hhRealTotal = 0;
+        let temCurva = false;
+
+        Object.keys(dadosPorDisciplina).forEach(key => {
+            const cfgDisc = disciplinasCfg[key] || {};
+            if (cfgDisc.ativo === false) return;
+
+            const hhContratoDisc = Number(cfgDisc.hh) || 0;
+            hhContratoTotal += hhContratoDisc;
+
+            const curva = Array.isArray(dadosPorDisciplina[key]?.curva) ? dadosPorDisciplina[key].curva : [];
+            const hh = Array.isArray(dadosPorDisciplina[key]?.hh) ? dadosPorDisciplina[key].hh : [];
+
+            const avancoRealDisc = curva.reduce((a, c) => {
+                return a + valorPercentual(c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']);
+            }, 0);
+
+            if (curva.length) {
+                temCurva = true;
+                hhContratoComCurva += hhContratoDisc;
+                hhAgregadoTotal += avancoRealDisc * hhContratoDisc;
+            }
+
+            hhRealTotal += hh.reduce((a, c) => a + numeroPlanilha(c.HH_Real ?? c['HH Real'] ?? c.HH), 0);
+        });
+
+        const contratoBase = hhContratoTotal || hhContratoComCurva || Number(cfg.hh) || 0;
+        const avancoProjeto = contratoBase > 0 ? hhAgregadoTotal / contratoBase : 0;
+        const produtividade = hhRealTotal > 0 ? (hhAgregadoTotal / hhRealTotal) * 100 : 0;
+
+        return {
+            avancoRealAcm: temCurva ? avancoProjeto : 0,
+            hhRealAcm: hhRealTotal,
+            prodAcm: produtividade
+        };
+    }
+
+    // Estrutura antiga: painel/curva e painel/hh
+    const curvaLegada = Array.isArray(data.curva) ? data.curva : [];
+    const hhLegado = Array.isArray(data.hh) ? data.hh : [];
+    const hhContrato = Number(cfg.hh) || 0;
+    const avancoRealAcm = curvaLegada.reduce((a, c) => {
+        return a + valorPercentual(c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']);
+    }, 0);
+    const hhRealAcm = hhLegado.reduce((a, c) => a + numeroPlanilha(c.HH_Real ?? c['HH Real'] ?? c.HH), 0);
+    const prodAcm = hhRealAcm > 0 ? ((avancoRealAcm * hhContrato) / hhRealAcm) * 100 : 0;
+
+    return { avancoRealAcm, hhRealAcm, prodAcm };
+}
+
 function iniciarConexao(id, config) {
-    const app = firebase.initializeApp(config, id);
-    const db = app.database();
+    try {
+        const app = firebase.initializeApp(config, id);
+        const db = app.database();
 
-    db.ref('painel').on('value', snap => {
-        const data = snap.val();
-        if(!data) return;
+        db.ref('painel').on('value', snap => {
+            const data = snap.val();
+            if (!data) {
+                atualizarCard(id, 0, 0, 0);
+                return;
+            }
 
-        const hhContrato = parseFloat(data.config?.hh) || 0;
-        const avancoRealAcm = (data.curva || []).reduce((a,c)=>a+(parseFloat(c.Avanco_Realizado_Perc)||0),0);
-        const hhRealAcm = (data.hh || []).reduce((a,c)=>a+(parseFloat(c.HH_Real)||0),0);
-        const prodAcm = hhRealAcm > 0 ? ((avancoRealAcm * hhContrato) / hhRealAcm) * 100 : 0;
-
-        document.getElementById(`${id}-perc-txt`).innerText = (avancoRealAcm * 100).toFixed(2) + "%";
-        document.getElementById(`${id}-bar`).style.width = (avancoRealAcm * 100) + "%";
-        document.getElementById(`${id}-hh`).innerText = hhRealAcm.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-
-        const prodEl = document.getElementById(`${id}-prod`);
-        const prodBox = document.getElementById(`${id}-prod-box`);
-        prodEl.innerText = prodAcm.toFixed(1) + "%";
-
-        if(prodAcm < 100) {
-            prodEl.className = "text-sm font-black text-red-600";
-            prodBox.style.borderLeftColor = "#ef4444";
-        } else {
-            prodEl.className = "text-sm font-black text-green-600";
-            prodBox.style.borderLeftColor = "#10b981";
-        }
-    });
+            const resumo = calcularResumoPainel(data);
+            atualizarCard(id, resumo.avancoRealAcm, resumo.hhRealAcm, resumo.prodAcm);
+        }, err => {
+            console.error('Erro ao ler Firebase do projeto', id, err);
+            atualizarCard(id, 0, 0, 0);
+        });
+    } catch (e) {
+        console.error('Erro ao iniciar conexão Firebase do projeto', id, e);
+        atualizarCard(id, 0, 0, 0);
+    }
 }
 
 iniciarConexao('gerdau', configs.gerdau);
