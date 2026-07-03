@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfólio de Obras | Engenharia</title>
+    <title>Gestão de Obras | KAEFER Teckma</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -43,33 +43,32 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-        <!-- GERDAU -->
+        <!-- FS CNP -->
         <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
-            <div class="relative h-44">
-                <img src="https://iili.io/flIvyTF.png" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+            <div class="relative h-44 bg-white flex items-center justify-center border-b border-slate-100">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWkAAACMCAMAAACJW6j5AAABIFBMVEX///9bX2H41hr74RUbeFP42Rl4qys1hkgpf05DjUJRlTxdnDdYXF5loDRspDH09fVjZmj//vpxpy5zdniMj5CgoqPZ2ttPU1bLzc340wDl5ubS1NTV5dX63xYAbkX5+flscHJ/g4Ssrq/u8MltpRDt7u48iUUjfFCRlJVFjkExhEpZmjlMkj7DxMUefji1trdDjiiwsrNRliEIdj+EhogyhjD75lL87IT+++PPxiGLsSnbyx9inxj+86z//Oz85S/+9sP97H3++NX97pr+98n862364Uj877C7vySouSijtQmEriqZtCnr0R3CwiPk6859pwBLlVduqI291b5Gk2iYvqLd6d6Em4+4zL89gGN9rpa81MtVjHWQtaVNmX12oo2Ma+PKAAAOI0lEQVR4nO2djX+bNhrH8ZykSUYLLgiwWMrLTS1pozFvrF3abe2tt12zNbtbb8t17br7//+LkwR+RcIiYCznw89prdhYJl/Ljx490iM0bVRI67VZjU6GVI8ff/v9d9/1uDeo0XCm54+ffP91D3tTWiDNaL988d22T+mGaoU00d+//X7bJ3UjVSZNjPbLnnX74pEmrJ/0NqRt8UkT1i+2fWY3TSLSxF73bkirEpMePv/Htk/uRqmC9HD4ZNtnd5NUSXr45Ottn9/NUTXp4Q896ra0hnSPujWtI92jbktrSQ9/6AcxrWg96eGTYNsneSMkQbp39lqRDOlhP4RpQVKkh72pbi450o/7GEhjyZEevtz2ee6+JEk/7r3qphoNT4YnRMOThcLq7+T2pLcfDTUa7p+c7J/sD/dp4aQo7C8WWPH5i22f6a5rlPNlt1mh/NjJSd+oG2o0bcDknrHNi+yX/aK9s59+XqChRuN9Sb3snepGkif9Y+9+NJI86fE/e0vdRPKk93/szUcT1SB90puPJqpBevyyNx8NVIP0/vOedAPVIX3Sk26gOqTHL7Z9trusOqT3f9j22e6yRuOPpDXuSTdQHdIfDbd9trusWqTH2z7bXVY90v0o8fqqR7p3866veqS3nmkUQOhAx/cdx4HGbq2tqkf6xfZOFDp4ApIky6LIsqwoijI7ASD1fLS9c6olGdLj8eX5q1cXFxc//U1YjwGayxNVjvzYjqxwoJdkhlZkAww3wqZdrSM9vnz26unTn38+oPq0grQ5aKyYX7OXhCaFzH0NxT0wwyh2NkWoLa0hff46Z3ywnjSfRFPSCJgiyKu8Y7VbdhXp89cHdw8OZEk3Bs0hDW13PeYpbdcNU2OTrJpJSPry/PUy5u5JI+DW+6LorjmBqnokAtKX509LnDsmbeDQrV2FTtq1okaET/r8ooy5Y9IQDK5l+XU9EvowWxWP9OUrLudOSTvZtXtYF2we2zVUJj3+5bUAdIek/ej6royupvkokb7kG45uSTtWA9B2F9zqa5V0FejOSKMGoAeummZ6lfSzpxWgOyPdBLQeKepTL5OuBt0V6aS+dzeXmyrqUC+RXgO6I9KwCWjdVLM/XCb9TOh0dEq6wnasRPJ4RwBFjcci6bWgDz79l7AePulymLNCBWlcgTm0aFAaxORfkkWWycHtd0WuruakL9eCPvj0E2E9XNKmVUspq0kwZCGYQeo5aDrTEkDHxynIzKXYiG4rOzEwJ31xd61qktYjp5YYJCfkktat1OHYBQP6qT2Yw9bTjZFqqinp8S/rQdcmfZ0xRMxv0UAco0MOzgojolvqTghMST+TAN0FaYNrPFxc7bohB+jUY3GBoi6eNiM9fnpHQt9snjR3HO7y572WBGM6rYjrv2NXKki/kgHdBWnMqyeUemlgu5my/eGU9OWBKqQnPNshG8mAioY8mHLSF3du3yE/t28v368+1AFpwDEepqqDkVpipM/v3pbSFxsnbSRl0rqtbjdXQ4z0hRzoDkgjHunkxpB+Jtmkb2/eetzwNn3xsaS2ZD1ujJ2+/PmRMqR51kPZWZR6IqTPZUF3QDrgkZb0pxXXaHx5oRBprpdH+sQGf6EqGo2f3VGJdMqNc7uRwoM/SY3G58ePHh0/Ov6Y3E0LebFc6IC0JwiahhjtuAcy+ug15VjcKgr0U/h886ShYEmN7lqps9MNe3R59+xYVh2Q1nhdYsE6TPAOwx5dSnPuhjTfUOf16bplx5g397IDGj2Tb9KdkK5ev0Rj0FYS453JI5pr9ItipAXTW6u0oyT1dqttj346Uoy0VMZMnrZlq59HNNfo32enZ2enx0fHp8dF4SgvnBaFs3mhE9IallzDxNZ6kF7yun96xxp9s0DztFwo4OeFr2qvQvDltNzJCd0PLm7XjfAuWO3gi7MjplPe3fKvpzVJ03QqOYVLViCoudZUd/VEfYck+PzolLE+zpmenS7enRYfQ353Vpe0NKqVZRqwduqF7kae4g07+OpIXl2R1qAtnYY4Z22rzVpN0iy1tnYtA+ArHBtRlLRm4GskBujhRN1mrSppLYCgtgUhzTpRFjUhfZ/o6Ba5rSvc75I0qdKJamYzU9SRqjkB2q8U4v0pTVa4dX9KeKXwWaekSTNwamToz+pStVX/ugxYUDjaCmmNdo2hxK4TS5WZG+HUXL/ektcWSBN5wKI7qUjX5io66/hGedLEivjAtmR2VClQq7lq4T+fqU9aoyYbS9PWQyWH5p/sBmkq5OA4sYRbMi1o0hqeFoXu7wxpdrqOlwJLr3ZJ1MxoNn7bKdLsvaCTJmaVr61kFkbw+62H5HZIbg+JKgt1SV8zaiojBL1kIIat5GYq7798ePiQ0jykOCsLX9adCfA9OfnX+bYHMDYF0zN6pqL5uKIN9rDgye4Y2Fsc1DXb9Ob3NDEEsRHdUjGpGf33y0NJ1W3THeweI9jdpmyoA6f4+ohqgq5DVxVPNhh4fbvLpEXrQ0pZzeS4kMgUnhMcMNJgg2GTq992mbTmcL2ekkeNIgCZRPUw0lqwybmE0e87TZq75FovZeUiawrfyBdAGfnKHER6bUafkQ4cWoYe+Zl204aPyQHtzJy9f7DTpHl73OglN29OGuZbFzombcO+HWVRRNPSC+sRk+LE9CIrNBOKGgKLHODorXjo6M1OkzY4xoNHemq6YcSo+aZPO1TgQDihrgojbSR0z5vYzVLHiamxD4CFIcRZS9tZvD18cLh3+IAoL+TFcuFeR6TrTbwanMXtHOsRWTZRhpZIxyzZIADxMmnG1cgy8mjuxeCWSAdvCM29B0zcwmFe6KhNG4OkzhSVwXM+OD2ilVAtkTaSDFPXjz28QNpkVhmEmublUziB29IWLf4fOeo9xjUvzu7nxY5Ix64e1tiLjWeny/70op2ekUa2bjKtkmYHUtK4yLBpi7T2bo+IC/rB3vyhjqyHyxIAPFnWvGTR8hhxgbTFSMesTc/tOZ80NFn36bVG+uqPPQl1QzplbVR3LbkF0g7P9Sjnei22adKCA2SGPs1AoH2CAQMRacPOoGHAqL0Nnt6qQ3o66NPdCMO1sCEv2YuTwDgnHaSDJJ2ENu0RETAnjpdkBDLUy6QDuj2zlRD/o8WttD7cU4T0wn55pF3HfuV29IHPHYybZS4IzEw3mmRWNoEULytHbJUZoitFjJh2EDhjx6Xs/BGOYz9w24t4B2/Wo+6CdLC0zlR3zYocosCJuemLOi/ejRYqQQ6xH8VHiGBuafLfEWIPFc9o0+F52uam1ldqtOlS6qfuDqxkgv3VPxU5GFiCSa721iEEE+CTkUu7Uwvv1/aKXZDmpujTHKIsAXFKw56+52EcJxmdKedybnXLTd+2LCtsebfUtw+2T1q4m3pxMaJcpviiRfRQqwGEkhD0/fUdc02tQ90B6bh6hYF4k94FuaquzFvQGl9v86RFaeN1pOi1L1ZUbas3TzptDlqPRG5hUC/Mb4hNRh7GXjwOMf+ozn4N7//cJmloNyatWwJ/zPBjEHtC7zxY5YqyRIgaRfG8HivU6N6VdB6BbQtaqkkg580WSXstgBb4HUFM3JfINEUrS5x45TMwUnGUC2ULR0+otcLUhQ9YGmqpJpGuPuyJxjAbJ+1k9TMuVkCL1pn6AwAR8oFoBILNGt98Qnr15fPBknxNwXvRcLGDHvEaOVuL7xgJPWkcsqcoBDhhuJ0U0cylGKRkMA4TE6e0RcIUgPwiaZhGE8lB3gSkDGPgkOcws8dkMI9BnF9r1Eu1KenUZ38CqSnA+UbOafUoXtSsO/DyDM+undyy8IbiMbM/v1aDZzLoOCRHp1YCIhtp2BokNITqWxEAId3zN7DpZtZpSOcRB9T4B6llA2DSHSmRDewI2CZ7vyTSpqTDCY1om6QmcjAby6+LTAVX73isO4kwIVw/kSh/Oz2tcKRRomfFBf28vHljwsLIYiNApJsMJiGkMQ/oI8OAtGcLEkbatR2EPBYcdOhzvu5R0voEBYZv0dUhYE6azlUWNTkhbc1YX9s9Bp9wTEhHMwEGtuqz1t2sOghEMxxNZl2WSE8TkPDi8vYsmZHOZwKSefKMOaGk85cxviuki5oMQBP2LKkIDPrr3r2tkKbBUFtmQfoi51AirAnTAV0StkCadF9uvighzUkHOLIs8v2fkc6dRkBJGyl9jk5RoizfJt8JPRFp8i6OBl3JEODo/V9/bIW0RgPHUWVwY+Ft9IEpdDlWa9WzGenCkpKmTr8NadESTZCmqTUnnc/eUNIwC2PyHGvThZdXRZr6J3TWRlbG23d//kUhryXNuRZOw/UeMLbzi4xXYw4jILH8uggSWRbp9RjpwJ6OcTw6cZCyfWph/pFFPNJ+vp4+tx7ZOutBXprBsN5MTXD14cO7/zFdCQ8ysqis5gEI6MVJxJLkVoHnj5iRHUtNNxpRQno25NMlN9BKoIGwHkEN0bA3A4IHjkFXKJDhiuG5fNI4CIxYZ6T1mPaIdEayTJrVxOYr6/joC6oOG0CO2ompQXotInbxJ1NnWQaUuWlFWQJSLJtMQLwuM0uyAfPf0oEFsgiQNu1k2WSSsWlE4t4lmhFbIE2i0J7b6Zz0gHovVhwndhhTy2BnSQzCiL597uWZUy+vqIm+aDdiXStC0HHoDAAxlCmm8p2aH6RDxigxLhY/AjCBkG6cQAcj+biEPEb9N/L7xMGYGnA69vAn7BuDGUJ6LKKjEyP1F0Y4tCE7bBeG1J/WRBslFg79b7oCI5gXZwt4ZyG7ojB7Kv+veHB+LCvSmmZXAGP3wcphGjUrKuaA3DTRUf5AzVzfGyYj0fW4b9KdaMV/+D+mFVxLA+ChLQAAAABJRU5ErkJggg==" alt="FS Fueling Sustainability" class="max-w-[82%] max-h-[78%] object-contain">
                 <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-lg">Em Execução</span>
             </div>
             <div class="p-6">
-                <h3 class="font-bold text-slate-800 text-lg mb-4 h-12">Gerdau - Mogi das Cruzes</h3>
+                <h3 class="font-bold text-slate-800 text-lg mb-4 h-12">FS Fueling Sustainability. – Projeto CNP</h3>
                 <div class="mb-6">
                     <div class="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">
                         <span>Avanço Realizado</span>
-                        <span id="gerdau-perc-txt" class="text-blue-600 font-black text-sm">0.00%</span>
+                        <span id="fs-cnp-perc-txt" class="text-blue-600 font-black text-sm">0.00%</span>
                     </div>
-                    <div class="progress-bar-bg"><div id="gerdau-bar" class="progress-bar-fill" style="width: 0%"></div></div>
+                    <div class="progress-bar-bg"><div id="fs-cnp-bar" class="progress-bar-fill" style="width: 0%"></div></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 border-t pt-4 border-slate-50">
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">HH Real Acum.</span>
-                        <span id="gerdau-hh" class="text-sm font-black text-slate-700">---</span>
+                        <span id="fs-cnp-hh" class="text-sm font-black text-slate-700">---</span>
                     </div>
-                    <div id="gerdau-prod-box" class="bg-slate-50 p-3 rounded-xl border border-slate-100 border-l-4 border-l-orange-400">
+                    <div id="fs-cnp-prod-box" class="bg-slate-50 p-3 rounded-xl border border-slate-100 border-l-4 border-l-orange-400">
                         <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Produtividade</span>
-                        <span id="gerdau-prod" class="text-sm font-black text-slate-700">---</span>
+                        <span id="fs-cnp-prod" class="text-sm font-black text-slate-700">---</span>
                     </div>
                 </div>
-                <a href="https://ricardoprf.github.io/Painel-Bordo-Gerdau/" class="mt-6 block text-center bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-md">Detalhes do Projeto</a>
+                <a href="https://ricardoprf.github.io/Painel-Bordo-FS-CNP/" class="mt-6 block text-center bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-md">Detalhes do Projeto</a>
             </div>
         </div>
 
@@ -105,9 +104,8 @@
 
         <!-- FS BECCS -->
         <div class="card-project bg-white rounded-2xl overflow-hidden flex flex-col shadow-sm">
-            <div class="relative h-44">
-                <img src="https://i.imgur.com/T4v4MKt.png" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+            <div class="relative h-44 bg-white flex items-center justify-center border-b border-slate-100">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWkAAACMCAMAAACJW6j5AAABIFBMVEX///9bX2H41hr74RUbeFP42Rl4qys1hkgpf05DjUJRlTxdnDdYXF5loDRspDH09fVjZmj//vpxpy5zdniMj5CgoqPZ2ttPU1bLzc340wDl5ubS1NTV5dX63xYAbkX5+flscHJ/g4Ssrq/u8MltpRDt7u48iUUjfFCRlJVFjkExhEpZmjlMkj7DxMUefji1trdDjiiwsrNRliEIdj+EhogyhjD75lL87IT+++PPxiGLsSnbyx9inxj+86z//Oz85S/+9sP97H3++NX97pr+98n862364Uj877C7vySouSijtQmEriqZtCnr0R3CwiPk6859pwBLlVduqI291b5Gk2iYvqLd6d6Em4+4zL89gGN9rpa81MtVjHWQtaVNmX12oo2Ma+PKAAAOI0lEQVR4nO2djX+bNhrH8ZykSUYLLgiwWMrLTS1pozFvrF3abe2tt12zNbtbb8t17br7//+LkwR+RcIiYCznw89prdhYJl/Ljx490iM0bVRI67VZjU6GVI8ff/v9d9/1uDeo0XCm54+ffP91D3tTWiDNaL988d22T+mGaoU00d+//X7bJ3UjVSZNjPbLnnX74pEmrJ/0NqRt8UkT1i+2fWY3TSLSxF73bkirEpMePv/Htk/uRqmC9HD4ZNtnd5NUSXr45Ottn9/NUTXp4Q896ra0hnSPujWtI92jbktrSQ9/6AcxrWg96eGTYNsneSMkQbp39lqRDOlhP4RpQVKkh72pbi450o/7GEhjyZEevtz2ee6+JEk/7r3qphoNT4YnRMOThcLq7+T2pLcfDTUa7p+c7J/sD/dp4aQo7C8WWPH5i22f6a5rlPNlt1mh/NjJSd+oG2o0bcDknrHNi+yX/aK9s59+XqChRuN9Sb3snepGkif9Y+9+NJI86fE/e0vdRPKk93/szUcT1SB90puPJqpBevyyNx8NVIP0/vOedAPVIX3Sk26gOqTHL7Z9trusOqT3f9j22e6yRuOPpDXuSTdQHdIfDbd9trusWqTH2z7bXVY90v0o8fqqR7p3866veqS3nmkUQOhAx/cdx4HGbq2tqkf6xfZOFDp4ApIky6LIsqwoijI7ASD1fLS9c6olGdLj8eX5q1cXFxc//U1YjwGayxNVjvzYjqxwoJdkhlZkAww3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" alt="FS Fueling Sustainability" class="max-w-[82%] max-h-[78%] object-contain">
                 <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-lg">Em Execução</span>
             </div>
             <div class="p-6">
@@ -138,9 +136,15 @@
 
 <script>
 const configs = {
-    gerdau: {
-        apiKey: "AIzaSyCfybt3i0VMxIyA9p1bPh8jNIptY-KnosI",
-        databaseURL: "https://painel-de-bordo-gerdau-default-rtdb.firebaseio.com"
+    fsCnp: {
+        // FS Fueling Sustainability — Projeto CNP
+        apiKey: "AIzaSyDFSe7tWTsyCo08Q4XHPpPvw5nz5pFHnj4",
+        authDomain: "painel-de-bordo-fs-cnp.firebaseapp.com",
+        databaseURL: "https://painel-de-bordo-fs-cnp-default-rtdb.firebaseio.com",
+        projectId: "painel-de-bordo-fs-cnp",
+        storageBucket: "painel-de-bordo-fs-cnp.firebasestorage.app",
+        messagingSenderId: "968571256747",
+        appId: "1:968571256747:web:a90764c0fbff29d4b55cee"
     },
     andritz: {
         apiKey: "AIzaSyAW35OKtqp0sp6vBgC3QsDyB31nfO6gQyo",
@@ -208,7 +212,7 @@ function calcularResumoPainel(data) {
     const disciplinasCfg = cfg.disciplinas || {};
     const dadosPorDisciplina = data.dados || null;
 
-    // Estrutura nova do Painel FS/Gerdau: painel/dados/{disciplina}/curva e painel/dados/{disciplina}/hh
+    // Estrutura de painéis multidisciplinares: painel/dados/{disciplina}/curva e painel/dados/{disciplina}/hh
     if (dadosPorDisciplina && typeof dadosPorDisciplina === 'object') {
         let hhContratoTotal = 0;
         let hhContratoComCurva = 0;
@@ -287,7 +291,7 @@ function iniciarConexao(id, config) {
     }
 }
 
-iniciarConexao('gerdau', configs.gerdau);
+iniciarConexao('fs-cnp', configs.fsCnp);
 iniciarConexao('andritz', configs.andritz);
 iniciarConexao('syngenta', configs.syngenta);
 </script>
