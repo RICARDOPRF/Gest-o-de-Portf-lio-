@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
@@ -16,6 +17,207 @@
         .card-project:hover { transform: translateY(-5px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1); }
         .progress-bar-bg { background-color: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden; }
         .progress-bar-fill { background-color: #10b981; height: 100%; transition: width 1s ease-in-out; }
+
+        /* Acesso administrativo aberto sobre o próprio portfólio */
+        body.modal-config-aberto { overflow: hidden; }
+
+        .config-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 34px;
+            padding: 0 14px;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .config-button:hover {
+            background: rgba(255, 255, 255, 0.20);
+            transform: translateY(-1px);
+        }
+
+        .config-login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 22px;
+            background: rgba(15, 23, 42, 0.54);
+            -webkit-backdrop-filter: blur(7px);
+            backdrop-filter: blur(7px);
+        }
+
+        .config-login-overlay.aberto {
+            display: flex;
+            animation: configFadeIn 0.18s ease-out;
+        }
+
+        .config-login-card {
+            width: min(390px, 100%);
+            padding: 30px 31px 27px;
+            border: 1px solid rgba(255, 255, 255, 0.74);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.91);
+            box-shadow: 0 28px 80px rgba(15, 23, 42, 0.32);
+            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(18px);
+            transform-origin: center;
+            animation: configCardIn 0.22s ease-out;
+        }
+
+        .config-login-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 25px;
+        }
+
+        .config-login-symbol {
+            width: 64px;
+            height: 64px;
+            position: relative;
+            flex: 0 0 64px;
+            border: 4px solid #9aa8ae;
+            border-radius: 8px;
+        }
+
+        .config-login-symbol::before,
+        .config-login-symbol::after {
+            content: "";
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            border: 4px solid #9aa8ae;
+            border-radius: 999px;
+        }
+
+        .config-login-symbol::before {
+            top: 11px;
+            bottom: 11px;
+        }
+
+        .config-login-symbol::after {
+            top: 25px;
+            height: 0;
+            border-left: 0;
+            border-right: 0;
+            border-bottom: 0;
+            border-radius: 0;
+        }
+
+        .config-login-name strong {
+            display: block;
+            color: #f13c1d;
+            font-size: 31px;
+            line-height: 1;
+            letter-spacing: 1.2px;
+            font-weight: 900;
+        }
+
+        .config-login-name span {
+            display: block;
+            margin-top: 5px;
+            color: #91a0a8;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .config-login-title {
+            margin: 0 0 18px;
+            color: #1f2937;
+            font-size: 18px;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .config-login-field {
+            width: 100%;
+            height: 45px;
+            margin-bottom: 13px;
+            padding: 0 13px;
+            color: #172033;
+            background: rgba(232, 240, 254, 0.92);
+            border: 1px solid #c8d2df;
+            border-radius: 5px;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            transition: 0.2s ease;
+        }
+
+        .config-login-field:focus {
+            border-color: #1685c7;
+            box-shadow: 0 0 0 3px rgba(22, 133, 199, 0.12);
+        }
+
+        .config-login-enter,
+        .config-login-back {
+            width: 100%;
+            min-height: 42px;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .config-login-enter {
+            margin-top: 3px;
+            color: #ffffff;
+            background: #087fbe;
+            border: 1px solid #087fbe;
+        }
+
+        .config-login-enter:hover { background: #076da3; }
+        .config-login-enter:disabled { opacity: 0.62; cursor: wait; }
+
+        .config-login-back {
+            margin-top: 9px;
+            color: #465367;
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid #cfd7e2;
+        }
+
+        .config-login-back:hover { background: rgba(255, 255, 255, 0.92); }
+
+        .config-login-message {
+            min-height: 18px;
+            margin-top: 10px;
+            color: #c62828;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        @keyframes configFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes configCardIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @media (max-width: 640px) {
+            .config-button .config-label { display: none; }
+            .config-button { width: 36px; padding: 0; }
+            .config-login-card { padding: 27px 22px 23px; }
+            .config-login-name strong { font-size: 27px; }
+            .config-login-name span { font-size: 13px; }
+        }
+
     </style>
 </head>
 <body>
@@ -26,16 +228,19 @@
         <span class="font-bold text-lg tracking-wider uppercase">Painel de Controle de Obras</span>
     </div>
     <div class="flex items-center gap-3">
+        <button
+            type="button"
+            class="config-button"
+            onclick="abrirLoginConfiguracao()"
+            aria-label="Abrir configurações administrativas"
+            title="Configurações administrativas">
+            <span aria-hidden="true">⚙️</span>
+            <span class="config-label">Configurações</span>
+        </button>
+
         <div class="hidden sm:block text-xs font-medium bg-blue-800 px-3 py-1 rounded-full border border-blue-400/30">
             Status: <span class="text-green-400">● Online</span>
         </div>
-        <a href="./central-administrativa-paineis.html"
-           aria-label="Abrir configurações administrativas"
-           title="Configurações administrativas"
-           class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/25 text-white px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition">
-            <span aria-hidden="true">⚙️</span>
-            <span class="hidden sm:inline">Configurações</span>
-        </a>
     </div>
 </nav>
 
@@ -323,6 +528,50 @@
     </div>
 </div>
 
+
+<!-- Login administrativo: abre sobre o portfólio sem trocar a tela -->
+<div
+    id="configLoginOverlay"
+    class="config-login-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="configLoginTitle"
+    onclick="fecharLoginAoClicarFora(event)">
+    <form id="configLoginForm" class="config-login-card" autocomplete="on">
+        <div class="config-login-brand" aria-label="KAEFER Teckma Engenharia">
+            <div class="config-login-symbol" aria-hidden="true"></div>
+            <div class="config-login-name">
+                <strong>KAEFER</strong>
+                <span>Teckma Engenharia</span>
+            </div>
+        </div>
+
+        <h2 id="configLoginTitle" class="config-login-title">Acesso ao Sistema</h2>
+
+        <input
+            id="configLoginEmail"
+            class="config-login-field"
+            type="email"
+            value="paulo@kaefer.com"
+            placeholder="E-mail"
+            autocomplete="username"
+            required>
+
+        <input
+            id="configLoginPassword"
+            class="config-login-field"
+            type="password"
+            placeholder="Senha"
+            autocomplete="current-password"
+            required>
+
+        <button id="configLoginEnter" class="config-login-enter" type="submit">Entrar</button>
+        <button class="config-login-back" type="button" onclick="fecharLoginConfiguracao()">Voltar</button>
+
+        <div id="configLoginMessage" class="config-login-message" aria-live="polite"></div>
+    </form>
+</div>
+
 <script>
 const configs = {
     fsCnp: {
@@ -494,162 +743,64 @@ function atualizarCard(id, avancoRealAcm, hhRealAcm, prodAcm, dataInicio='', dat
     atualizarStatusProjeto(id, perc, dataInicio, dataFim);
 }
 
-function chavesOficiaisResumo(data, idProjeto) {
-    const cfg = data.config || {};
-    const disciplinasCfg = cfg.disciplinas || {};
-    const dadosPorDisciplina = data.dados || {};
-
-    // O painel interno usa a configuração das disciplinas como fonte oficial.
-    // Quando ela não existe, utiliza as chaves presentes na base como compatibilidade.
-    let chaves = Object.keys(disciplinasCfg);
-    if (!chaves.length) chaves = Object.keys(dadosPorDisciplina);
-
-    const excluirSempre = new Set(['geral', 'legacy']);
-
-    // No BECCS estas três chaves são apenas visões de detalhe da Tubulação.
-    // Elas não entram novamente no Painel Geral, pois já estão consolidadas em "tubulacao".
-    const detalhesBeccs = new Set([
-        'fabricacao_tubulacao',
-        'montagem_tubulacao',
-        'suportes'
-    ]);
-
-    return [...new Set(chaves)].filter(key => {
-        if (excluirSempre.has(key)) return false;
-        if (idProjeto === 'syngenta' && detalhesBeccs.has(key)) return false;
-
-        const cfgDisc = disciplinasCfg[key] || {};
-        return cfgDisc.ativo !== false;
-    });
-}
-
-function calcularResumoPainel(data, idProjeto='') {
+function calcularResumoPainel(data) {
     const cfg = data.config || {};
     const disciplinasCfg = cfg.disciplinas || {};
     const dadosPorDisciplina = data.dados || null;
 
-    // Estrutura multidisciplinar, seguindo o mesmo critério do Painel Geral interno:
-    // avanço ponderado pelo HH contratual das disciplinas oficiais ativas.
+    // Estrutura de painéis multidisciplinares: painel/dados/{disciplina}/curva e painel/dados/{disciplina}/hh
     if (dadosPorDisciplina && typeof dadosPorDisciplina === 'object') {
-        const chaves = chavesOficiaisResumo(data, idProjeto);
-
         let hhContratoTotal = 0;
+        let hhContratoComCurva = 0;
         let hhAgregadoTotal = 0;
         let hhRealTotal = 0;
         let temCurva = false;
 
-        chaves.forEach(key => {
+        Object.keys(dadosPorDisciplina).forEach(key => {
             const cfgDisc = disciplinasCfg[key] || {};
-            const hhContratoDisc = numeroPlanilha(cfgDisc.hh);
+            if (cfgDisc.ativo === false) return;
+
+            const hhContratoDisc = Number(cfgDisc.hh) || 0;
             hhContratoTotal += hhContratoDisc;
 
-            const bloco = dadosPorDisciplina[key] || {};
-            const curva = Array.isArray(bloco.curva) ? bloco.curva : [];
-            const hh = Array.isArray(bloco.hh) ? bloco.hh : [];
+            const curva = Array.isArray(dadosPorDisciplina[key]?.curva) ? dadosPorDisciplina[key].curva : [];
+            const hh = Array.isArray(dadosPorDisciplina[key]?.hh) ? dadosPorDisciplina[key].hh : [];
 
-            const avancoRealDisc = curva.reduce((total, registro) => {
-                return total + valorPercentual(
-                    registro.Avanco_Realizado_Perc ??
-                    registro.Realizado ??
-                    registro.Percentual_Real ??
-                    registro['% Real']
-                );
+            const avancoRealDisc = curva.reduce((a, c) => {
+                return a + valorPercentual(c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']);
             }, 0);
 
             if (curva.length) {
                 temCurva = true;
+                hhContratoComCurva += hhContratoDisc;
                 hhAgregadoTotal += avancoRealDisc * hhContratoDisc;
             }
 
-            hhRealTotal += hh.reduce((total, registro) => {
-                return total + numeroPlanilha(
-                    registro.HH_Real ??
-                    registro['HH Real'] ??
-                    registro.HH
-                );
-            }, 0);
+            hhRealTotal += hh.reduce((a, c) => a + numeroPlanilha(c.HH_Real ?? c['HH Real'] ?? c.HH), 0);
         });
 
-        const contratoBase = hhContratoTotal || numeroPlanilha(cfg.hh);
-        const avancoProjeto = contratoBase > 0
-            ? hhAgregadoTotal / contratoBase
-            : 0;
+        const contratoBase = hhContratoTotal || hhContratoComCurva || Number(cfg.hh) || 0;
+        const avancoProjeto = contratoBase > 0 ? hhAgregadoTotal / contratoBase : 0;
+        const produtividade = hhRealTotal > 0 ? (hhAgregadoTotal / hhRealTotal) * 100 : 0;
 
-        const produtividade = hhRealTotal > 0
-            ? (hhAgregadoTotal / hhRealTotal) * 100
-            : 0;
-
-        if (temCurva) {
-            return {
-                avancoRealAcm: avancoProjeto,
-                hhRealAcm: hhRealTotal,
-                prodAcm: produtividade,
-                dataInicio: cfg.inicio || '',
-                dataFim: cfg.fim || ''
-            };
-        }
-
-        // Mesmo fallback do painel interno: usa a base legacy quando
-        // não existe curva nas disciplinas oficiais.
-        const legacy = dadosPorDisciplina.legacy || {};
-        const curvaLegacy = Array.isArray(legacy.curva) ? legacy.curva : [];
-        const hhLegacy = Array.isArray(legacy.hh) ? legacy.hh : [];
-
-        if (curvaLegacy.length || hhLegacy.length) {
-            const avancoLegacy = curvaLegacy.reduce((total, registro) => {
-                return total + valorPercentual(
-                    registro.Avanco_Realizado_Perc ??
-                    registro.Realizado ??
-                    registro.Percentual_Real ??
-                    registro['% Real']
-                );
-            }, 0);
-
-            const hhRealLegacy = hhLegacy.reduce((total, registro) => {
-                return total + numeroPlanilha(
-                    registro.HH_Real ??
-                    registro['HH Real'] ??
-                    registro.HH
-                );
-            }, 0);
-
-            return {
-                avancoRealAcm: avancoLegacy,
-                hhRealAcm: hhRealLegacy,
-                prodAcm: hhRealLegacy > 0
-                    ? ((avancoLegacy * contratoBase) / hhRealLegacy) * 100
-                    : 0,
-                dataInicio: cfg.inicio || '',
-                dataFim: cfg.fim || ''
-            };
-        }
+        return {
+            avancoRealAcm: temCurva ? avancoProjeto : 0,
+            hhRealAcm: hhRealTotal,
+            prodAcm: produtividade,
+            dataInicio: cfg.inicio || '',
+            dataFim: cfg.fim || ''
+        };
     }
 
-    // Estrutura antiga: painel/curva e painel/hh.
+    // Estrutura antiga: painel/curva e painel/hh
     const curvaLegada = Array.isArray(data.curva) ? data.curva : [];
     const hhLegado = Array.isArray(data.hh) ? data.hh : [];
-    const hhContrato = numeroPlanilha(cfg.hh);
-
-    const avancoRealAcm = curvaLegada.reduce((total, registro) => {
-        return total + valorPercentual(
-            registro.Avanco_Realizado_Perc ??
-            registro.Realizado ??
-            registro.Percentual_Real ??
-            registro['% Real']
-        );
+    const hhContrato = Number(cfg.hh) || 0;
+    const avancoRealAcm = curvaLegada.reduce((a, c) => {
+        return a + valorPercentual(c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']);
     }, 0);
-
-    const hhRealAcm = hhLegado.reduce((total, registro) => {
-        return total + numeroPlanilha(
-            registro.HH_Real ??
-            registro['HH Real'] ??
-            registro.HH
-        );
-    }, 0);
-
-    const prodAcm = hhRealAcm > 0
-        ? ((avancoRealAcm * hhContrato) / hhRealAcm) * 100
-        : 0;
+    const hhRealAcm = hhLegado.reduce((a, c) => a + numeroPlanilha(c.HH_Real ?? c['HH Real'] ?? c.HH), 0);
+    const prodAcm = hhRealAcm > 0 ? ((avancoRealAcm * hhContrato) / hhRealAcm) * 100 : 0;
 
     return {
         avancoRealAcm,
@@ -672,7 +823,7 @@ function iniciarConexao(id, config) {
                 return;
             }
 
-            const resumo = calcularResumoPainel(data, id);
+            const resumo = calcularResumoPainel(data);
             atualizarCard(
                 id,
                 resumo.avancoRealAcm,
@@ -700,6 +851,121 @@ iniciarConexao('nouryon-clo2', configs.nouryonClo2);
 iniciarConexao('nouryon-clorato', configs.nouryonClorato);
 iniciarConexao('regenerador', configs.regenerador);
 iniciarConexao('forno-panela', configs.fornoPanela);
+
+
+/* =========================================================
+   LOGIN DAS CONFIGURAÇÕES
+   Usa o Firebase Authentication do BECCS.
+   A instância possui o mesmo nome usado pela Central
+   Administrativa para manter a sessão ao trocar de página.
+========================================================= */
+const EMAIL_ADMIN_CONFIGURACAO = 'paulo@kaefer.com';
+const PAGINA_CENTRAL_ADMINISTRATIVA = './central-administrativa-paineis.html';
+
+let authConfiguracao = null;
+
+function obterAuthConfiguracao() {
+    if (authConfiguracao) return authConfiguracao;
+
+    let appAuth;
+    try {
+        appAuth = firebase.app('central-admin-beccs');
+    } catch (erro) {
+        appAuth = firebase.initializeApp(configs.syngenta, 'central-admin-beccs');
+    }
+
+    authConfiguracao = appAuth.auth();
+
+    authConfiguracao
+        .setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .catch(erro => console.warn('Não foi possível definir a sessão administrativa:', erro));
+
+    return authConfiguracao;
+}
+
+function abrirLoginConfiguracao() {
+    const overlay = document.getElementById('configLoginOverlay');
+    const mensagem = document.getElementById('configLoginMessage');
+    const senha = document.getElementById('configLoginPassword');
+
+    mensagem.textContent = '';
+    senha.value = '';
+    overlay.classList.add('aberto');
+    document.body.classList.add('modal-config-aberto');
+
+    window.setTimeout(() => senha.focus(), 120);
+}
+
+function fecharLoginConfiguracao() {
+    document.getElementById('configLoginOverlay').classList.remove('aberto');
+    document.body.classList.remove('modal-config-aberto');
+    document.getElementById('configLoginMessage').textContent = '';
+    document.getElementById('configLoginPassword').value = '';
+}
+
+function fecharLoginAoClicarFora(evento) {
+    if (evento.target.id === 'configLoginOverlay') {
+        fecharLoginConfiguracao();
+    }
+}
+
+document.getElementById('configLoginForm').addEventListener('submit', async evento => {
+    evento.preventDefault();
+
+    const email = document.getElementById('configLoginEmail').value.trim();
+    const senha = document.getElementById('configLoginPassword').value;
+    const mensagem = document.getElementById('configLoginMessage');
+    const botao = document.getElementById('configLoginEnter');
+
+    if (!email || !senha) {
+        mensagem.textContent = 'Informe o e-mail e a senha.';
+        return;
+    }
+
+    botao.disabled = true;
+    botao.textContent = 'Validando...';
+    mensagem.textContent = '';
+
+    try {
+        const credencial = await obterAuthConfiguracao()
+            .signInWithEmailAndPassword(email, senha);
+
+        const emailAutenticado = String(credencial.user?.email || '').toLowerCase();
+
+        if (emailAutenticado !== EMAIL_ADMIN_CONFIGURACAO.toLowerCase()) {
+            await obterAuthConfiguracao().signOut();
+            throw new Error('USUARIO_NAO_AUTORIZADO');
+        }
+
+        window.location.href = PAGINA_CENTRAL_ADMINISTRATIVA;
+    } catch (erro) {
+        console.error('Falha no acesso administrativo:', erro);
+
+        const mensagens = {
+            'auth/invalid-email': 'E-mail inválido.',
+            'auth/user-not-found': 'Usuário não encontrado.',
+            'auth/wrong-password': 'E-mail ou senha incorretos.',
+            'auth/invalid-login-credentials': 'E-mail ou senha incorretos.',
+            'auth/too-many-requests': 'Muitas tentativas. Aguarde e tente novamente.'
+        };
+
+        mensagem.textContent =
+            erro.message === 'USUARIO_NAO_AUTORIZADO'
+                ? 'Usuário sem permissão para acessar as configurações.'
+                : (mensagens[erro.code] || 'Não foi possível entrar. Confira os dados.');
+    } finally {
+        botao.disabled = false;
+        botao.textContent = 'Entrar';
+    }
+});
+
+document.addEventListener('keydown', evento => {
+    if (evento.key === 'Escape' &&
+        document.getElementById('configLoginOverlay').classList.contains('aberto')) {
+        fecharLoginConfiguracao();
+    }
+});
+
 </script>
 
 </body>
