@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+:root{--blue:#1e3a8a;--blue2:#2563eb;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--green:#10b981;--red:#ef4444;--amber:#f59e0b}
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.navbar{background:linear-gradient(110deg,#173776,#1e3a8a 60%,#234aa6)}
+.card-project{transition:.25s ease;border:1px solid #e5e7eb}
+.card-project:hover{transform:translateY(-5px);box-shadow:0 16px 28px -14px rgba(15,23,42,.35)}
+.progress-bar-bg{background:#e5e7eb;height:8px;border-radius:999px;overflow:hidden}
+.progress-bar-fill{background:linear-gradient(90deg,#10b981,#34d399);height:100%;transition:width .7s ease}
+.project-visual{height:176px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-bottom:1px solid #edf2f7;background:#fff}
+.brand-fs{font-size:74px;font-weight:900;letter-spacing:-9px;line-height:1;background:linear-gradient(135deg,#f97316 0 46%,#8b5cf6 47% 100%);-webkit-background-clip:text;color:transparent;padding-right:12px}
+.brand-word{font-size:31px;font-weight:900;letter-spacing:-1.5px;text-align:center;padding:0 24px}
+.brand-word small{display:block;font-size:12px;letter-spacing:2px;margin-top:5px;color:#64748b}
+.visual-andritz{background:linear-gradient(135deg,#151515,#3f3f46)}
+.visual-andritz .brand-word{color:white;font-size:42px}
+.visual-nouryon{background:linear-gradient(135deg,#eef2ff,#fff)}
+.visual-nouryon .brand-word{color:#2f2a78}
+.visual-arcelor{background:linear-gradient(135deg,#fff7ed,#fff)}
+.visual-arcelor .brand-word{color:#ea580c}
+.status-pill{position:absolute;top:16px;left:16px;color:#fff;font-size:10px;font-weight:900;padding:6px 10px;border-radius:999px;text-transform:uppercase;box-shadow:0 8px 18px rgba(15,23,42,.15)}
+.status-online{background:#10b981}.status-loading{background:#64748b}.status-error{background:#ef4444}.status-finished{background:#2563eb}.status-late{background:#dc2626}
+.admin-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);transition:.2s}
+.admin-btn:hover{background:white;color:#1e3a8a}
+.modal-shell{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(7px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-shell.open{display:flex}
+.modal-card{width:min(460px,100%);background:white;border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.38);overflow:hidden}
+.input{width:100%;border:1px solid #cbd5e1;border-radius:11px;padding:12px 13px;outline:none}
+.input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+#adminView{display:none}
+#adminView.active{display:block}
+#portfolioView.hidden-view{display:none}
+.admin-card{background:white;border:1px solid #e2e8f0;border-radius:17px;box-shadow:0 4px 16px rgba(15,23,42,.05)}
+.kpi-value{font-size:31px;font-weight:900;letter-spacing:-1px}
+.table-wrap{overflow:auto}
+table{border-collapse:collapse;width:100%}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:left;background:#f8fafc;padding:11px 12px;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+td{font-size:12px;padding:12px;border-bottom:1px solid #eef2f7;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.audit-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+.audit-success{background:#10b981}.audit-info{background:#2563eb}.audit-warning{background:#f59e0b}.audit-error{background:#ef4444}
+.badge{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:800;background:#eef2ff;color:#3730a3}
+.toast{position:fixed;right:22px;bottom:22px;background:#0f172a;color:white;padding:13px 16px;border-radius:12px;z-index:200;opacity:0;transform:translateY(18px);pointer-events:none;transition:.25s;box-shadow:0 16px 40px rgba(0,0,0,.3);font-size:12px}
+.toast.show{opacity:1;transform:translateY(0)}
+.spinner{width:17px;height:17px;border:2px solid rgba(255,255,255,.35);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:680px){.brand-word{font-size:25px}.project-visual{height:150px}}
