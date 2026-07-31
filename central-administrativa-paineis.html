@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Central executiva dos Painéis de Bordo">
+  <title>Central Administrativa | Painéis de Bordo</title>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+      --navy:#18398f; --navy-dark:#10265f; --blue:#2563eb; --blue-soft:#eff6ff;
+      --bg:#f3f6fa; --surface:#fff; --line:#e5eaf1; --text:#172033; --muted:#6b778c;
+      --green:#0fba81; --red:#ef4444; --amber:#f59e0b; --violet:#7c3aed;
+      --shadow:0 12px 32px rgba(30,58,138,.08);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-height:100vh;font-family:Inter,Arial,sans-serif;color:var(--text);background:var(--bg)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .hidden{display:none!important}
+
+    .access-gate{position:fixed;inset:0;z-index:999;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,rgba(16,38,95,.97),rgba(24,57,143,.93))}
+    .access-card{width:min(430px,100%);padding:30px;border-radius:20px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.28);text-align:center}
+    .access-card .lock{font-size:36px}.access-card h2{margin:14px 0 7px}.access-card p{color:var(--muted);font-size:12px;line-height:1.6}
+
+    .topbar{height:67px;padding:0 24px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 9px 25px rgba(20,48,120,.18)}
+    .topbar-brand,.topbar-actions,.user-chip{display:flex;align-items:center}.topbar-brand{gap:13px;font-weight:900;letter-spacing:.035em;text-transform:uppercase}.topbar-logo{font-size:25px}.topbar-actions{gap:10px}
+    .sync-chip,.user-chip{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);border-radius:999px;padding:8px 12px;font-size:11px;font-weight:700}.user-chip{gap:8px}.online-dot{width:8px;height:8px;border-radius:50%;background:#31e6a3;box-shadow:0 0 0 4px rgba(49,230,163,.12)}
+
+    .layout{display:grid;grid-template-columns:244px minmax(0,1fr);min-height:calc(100vh - 67px)}
+    .sidebar{padding:22px 16px;background:#fff;border-right:1px solid var(--line);position:sticky;top:67px;height:calc(100vh - 67px);overflow:auto}
+    .nav-label{padding:0 12px;margin:7px 0 10px;font-size:9px;color:#9aa5b7;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+    .nav-button{width:100%;border:0;background:transparent;display:flex;gap:11px;align-items:center;padding:12px;margin-bottom:5px;border-radius:11px;color:#5b667a;font-size:12px;font-weight:800;text-align:left}
+    .nav-button:hover{background:#f5f7fa;color:var(--navy)}.nav-button.active{color:var(--navy);background:#edf3ff}.nav-button .icon{width:22px;font-size:16px}
+    .sidebar-note{margin-top:22px;padding:14px;border-radius:12px;background:#f7f9fc;color:var(--muted);font-size:10px;line-height:1.55}
+
+    main{padding:25px;min-width:0}.view{display:none}.view.active{display:block}
+    .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.page-head h1{margin:0;font-size:26px;letter-spacing:-.6px}.page-head p{margin:6px 0 0;color:var(--muted);font-size:12px}.head-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+    .btn{border:0;border-radius:11px;min-height:42px;padding:0 16px;font-weight:800;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.55;cursor:wait;transform:none}
+    .btn-primary{background:var(--blue);color:#fff}.btn-dark{background:#131d31;color:#fff}.btn-light{background:#fff;color:#27334a;border:1px solid #dce3ed}.btn-danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}.btn-small{min-height:34px;padding:0 12px;font-size:11px}
+    .input,.select,.textarea{width:100%;border:1px solid #d9e0ea;border-radius:11px;padding:0 13px;outline:none;color:var(--text);background:#fff;transition:.2s}.input,.select{min-height:43px}.textarea{min-height:100px;padding:11px 13px;resize:vertical}.input:focus,.select:focus,.textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.10)}
+
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.kpi{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:0 5px 18px rgba(19,39,84,.035)}.kpi-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.kpi-label{font-size:9px;color:#8793a7;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.kpi-icon{width:31px;height:31px;display:grid;place-items:center;border-radius:9px;background:var(--blue-soft)}.kpi-value{margin-top:10px;font-size:29px;font-weight:900;letter-spacing:-1px}.kpi-help{margin-top:4px;color:#9aa5b6;font-size:10px}
+
+    .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 18px rgba(19,39,84,.035);overflow:hidden}.panel+.panel{margin-top:17px}.panel-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:14px;align-items:center}.panel-head h2{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.045em}.panel-head p{margin:4px 0 0;color:var(--muted);font-size:10px}.panel-body{padding:18px}
+    .filters{padding:13px 18px;border-bottom:1px solid var(--line);background:#fbfcfe;display:grid;grid-template-columns:minmax(180px,1fr) 220px 190px;gap:10px}
+    .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:1080px}th,td{padding:13px 16px;border-bottom:1px solid #edf0f4;text-align:left;vertical-align:middle;font-size:11px}th{background:#fbfcfe;color:#778399;font-size:9px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}tbody tr:hover{background:#fbfdff}.clickable-row{cursor:pointer}
+    .project-name{font-weight:900;font-size:12px}.project-url{max-width:270px;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9aa4b4;font-size:9px}.number-blue{color:var(--blue);font-weight:900;font-size:13px}.number-green{color:#059669;font-weight:900}.number-red{color:#dc2626;font-weight:900}.muted{color:var(--muted)}.nowrap{white-space:nowrap}.action-row{display:flex;gap:6px}
+
+    .status,.risk-badge,.tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:9px;font-weight:900;text-transform:uppercase;white-space:nowrap}.status:before{content:"";width:6px;height:6px;border-radius:50%}.status-online{background:#eafbf4;color:#07865f}.status-online:before{background:#10b981}.status-loading{background:#fff7e8;color:#a76b00}.status-loading:before{background:#f59e0b}.status-error{background:#fff0f1;color:#c22335}.status-error:before{background:#ef4444}
+    .risk-critical{background:#fff0f1;color:#c22335}.risk-attention{background:#fff7e8;color:#a76b00}.risk-stable{background:#eafbf4;color:#07865f}.risk-done{background:#eef2ff;color:#4f46e5}
+
+    .dashboard-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(310px,.8fr);gap:17px}.chart-box{height:330px;position:relative}.chart-box.small{height:270px}.summary-box{padding:17px;border-radius:14px;background:linear-gradient(135deg,#172554,#1e3a8a);color:#fff}.summary-box h3{margin:0 0 9px;font-size:14px}.summary-box p{margin:0;color:#e6eeff;font-size:11px;line-height:1.65}.summary-list{display:grid;gap:9px;margin-top:15px}.summary-item{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid rgba(255,255,255,.12);font-size:10px}.summary-item strong{text-align:right}
+    .info-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.info-card{padding:14px;border:1px solid var(--line);border-radius:13px;background:#fff}.info-card span{display:block;color:#8a96aa;font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.info-card strong{display:block;margin-top:8px;font-size:16px}.info-card small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:17px}.management-card{padding:17px;border:1px solid var(--line);border-radius:14px;background:#fff}.management-card h3{margin:0 0 12px;font-size:13px}.management-card p{color:var(--muted);font-size:11px;line-height:1.65;white-space:pre-wrap}.management-empty{padding:16px;border-radius:12px;background:#f7f9fc;color:#8d98aa;font-size:10px}
+    .progress-track{height:8px;background:#e8edf3;border-radius:99px;overflow:hidden}.progress-fill{height:100%;background:var(--green);border-radius:99px}.critical-card{padding:20px;border-radius:16px;color:#fff;background:linear-gradient(135deg,#991b1b,#ef4444);box-shadow:0 16px 36px rgba(220,38,38,.18)}.critical-card.attention{background:linear-gradient(135deg,#9a5b00,#f59e0b)}.critical-card.stable{background:linear-gradient(135deg,#047857,#10b981)}.critical-card h2{margin:0;font-size:20px}.critical-card p{margin:8px 0 0;font-size:11px;line-height:1.6;color:rgba(255,255,255,.9)}
+    .portfolio-ranking{display:grid;gap:10px}.ranking-item{display:grid;grid-template-columns:38px minmax(170px,1fr) 95px 95px 115px;gap:12px;align-items:center;padding:13px;border:1px solid var(--line);border-radius:13px;background:#fff;cursor:pointer}.ranking-item:hover{border-color:#bcd0ff;box-shadow:0 8px 20px rgba(37,99,235,.07)}.ranking-position{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:#eef3ff;color:var(--navy);font-weight:900}.ranking-project strong{display:block;font-size:12px}.ranking-project span{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+
+    .audit-empty{text-align:center;padding:46px 20px;color:#98a3b4;font-size:12px}
+    .modal-backdrop{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,18,45,.58);backdrop-filter:blur(4px)}.modal-backdrop.open{display:flex}.modal{width:min(720px,100%);max-height:92vh;overflow:auto;border-radius:18px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.25)}.modal-head{padding:20px 22px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;font-size:17px}.modal-head p{margin:5px 0 0;color:var(--muted);font-size:11px}.modal-body{padding:22px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{margin-bottom:15px}.field label{display:block;margin-bottom:7px;font-size:9px;font-weight:900;color:#67738a;text-transform:uppercase;letter-spacing:.08em}.field.full{grid-column:1/-1}
+    .toast{position:fixed;right:20px;bottom:20px;z-index:200;min-width:260px;max-width:420px;padding:13px 16px;border-radius:12px;color:#fff;background:#172033;font-size:11px;font-weight:800;box-shadow:0 20px 45px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translateY(0)}
+    .loading-screen{position:fixed;inset:0;z-index:998;display:grid;place-items:center;background:var(--bg)}.loading-card{text-align:center;color:var(--navy);font-weight:800}.spinner{width:34px;height:34px;margin:0 auto 14px;border:4px solid #dbe7ff;border-top-color:var(--blue);border-radius:50%;animation:spin .75s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:1180px){.kpi-grid,.info-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}.ranking-item{grid-template-columns:38px 1fr 90px 105px}.ranking-item>div:nth-child(4){display:none}}
+    @media(max-width:790px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;display:flex;gap:6px;overflow-x:auto;padding:10px;border-right:0;border-bottom:1px solid var(--line)}.nav-label,.sidebar-note{display:none}.nav-button{min-width:max-content;margin:0}main{padding:17px}.topbar{padding:0 14px}.sync-chip{display:none}.topbar-brand span:last-child{font-size:12px}.page-head{align-items:flex-start;flex-direction:column}.filters{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+    @media(max-width:560px){.kpi-grid,.info-grid{grid-template-columns:1fr}.user-chip span:last-child{display:none}.ranking-item{grid-template-columns:35px 1fr 92px}.ranking-item>div:nth-child(3){display:none}.chart-box{height:280px}}
+  </style>
+</head>
+<body>
+  <div id="loadingScreen" class="loading-screen"><div class="loading-card"><div class="spinner"></div>Carregando visão executiva...</div></div>
+  <div id="accessGate" class="access-gate hidden"><div class="access-card"><div class="lock">🔐</div><h2>Sessão administrativa não encontrada</h2><p>O acesso à central deve ser realizado pelo botão Configurações do portfólio.</p><a class="btn btn-primary" href="./index.html">Voltar ao portfólio</a></div></div>
+
+  <section id="appView" class="hidden">
+    <header class="topbar">
+      <div class="topbar-brand"><span class="topbar-logo">📊</span><span>Central Executiva de Obras</span></div>
+      <div class="topbar-actions"><div class="sync-chip">Sincronizado: <span id="lastSync">--:--</span></div><div class="user-chip"><span class="online-dot"></span><span id="userEmail">Administrador</span></div><a class="btn btn-light btn-small" href="./index.html">Portfólio</a><button class="btn btn-danger btn-small" onclick="logout()">Sair</button></div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="nav-label">Navegação</div>
+        <button class="nav-button active" data-view="overview" onclick="openView('overview',this)"><span class="icon">▦</span><span>Visão geral</span></button>
+        <button class="nav-button" data-view="project" onclick="openView('project',this)"><span class="icon">📈</span><span>Projetos</span></button>
+        <button class="nav-button" data-view="director" onclick="openView('director',this)"><span class="icon">◆</span><span>Diretoria</span></button>
+        <button class="nav-button" data-view="audit" onclick="openView('audit',this)"><span class="icon">☷</span><span>Auditoria</span></button>
+        <div class="sidebar-note">Resumo executivo de cada obra, prazos de finalização, tendência, mobilização, produtividade e planos de ação.</div>
+      </aside>
+
+      <main>
+        <section id="view-overview" class="view active">
+          <div class="page-head"><div><h1>Resumo executivo das obras</h1><p>Avanço, produtividade, prazo final, previsão pela tendência e criticidade do portfólio.</p></div><div class="head-actions"><button class="btn btn-light btn-small" onclick="refreshAll()">↻ Atualizar</button><button class="btn btn-dark btn-small" onclick="openView('director',document.querySelector('[data-view=director]'))">Avaliação da Diretoria</button></div></div>
+          <div class="kpi-grid">
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Obras vinculadas</span><span class="kpi-icon">🏗️</span></div><div id="kpiProjects" class="kpi-value">9</div><div class="kpi-help">Projetos acompanhados</div></article>
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Obras críticas</span><span class="kpi-icon">⚠️</span></div><div id="kpiCritical" class="kpi-value" style="color:#dc2626">0</div><div class="kpi-help">Exigem ação imediata</div></article>
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Conclusão no prazo</span><span class="kpi-icon">📅</span></div><div id="kpiOnTime" class="kpi-value" style="color:#059669">0</div><div class="kpi-help">Tendência dentro do prazo</div></article>
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Desvio médio</span><span class="kpi-icon">↘</span></div><div id="kpiDeviation" class="kpi-value">0,00 p.p.</div><div class="kpi-help">Realizado versus previsto</div></article>
+          </div>
+          <div id="criticalProjectCard" class="critical-card"><h2>Carregando criticidade...</h2><p>A central está consolidando os dados dos painéis.</p></div>
+          <div class="panel" style="margin-top:17px">
+            <div class="panel-head"><div><h2>Situação das obras</h2><p>Clique em uma obra para abrir o histórico das últimas seis semanas e a previsão de conclusão.</p></div></div>
+            <div class="filters"><input id="projectSearch" class="input" placeholder="Pesquisar obra ou projeto..." oninput="renderOverviewTable()"><select id="riskFilter" class="select" onchange="renderOverviewTable()"><option value="">Todas as situações</option><option value="critical">Críticas</option><option value="attention">Em atenção</option><option value="stable">Estáveis</option><option value="done">Concluídas</option></select><select id="deadlineFilter" class="select" onchange="renderOverviewTable()"><option value="">Todos os prazos</option><option value="late">Tendência de atraso</option><option value="ontime">Dentro do prazo</option><option value="unknown">Prazo não identificado</option></select></div>
+            <div class="table-wrap"><table><thead><tr><th>Projeto</th><th>Situação</th><th>Previsto</th><th>Realizado</th><th>Desvio</th><th>Produtividade</th><th>Fim contratual</th><th>Previsão tendência</th><th>Ações</th></tr></thead><tbody id="overviewBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="view-project" class="view">
+          <div class="page-head"><div><h1 id="projectTitle">Análise do projeto</h1><p>Histórico de seis semanas, produtividade, prazos e avaliação gerencial.</p></div><div class="head-actions"><select id="projectSelector" class="select" style="min-width:260px" onchange="selectProject(this.value)"></select><button class="btn btn-light btn-small" onclick="openEvaluationModal()">Editar avaliação</button><a id="openPanelButton" class="btn btn-dark btn-small" target="_blank" rel="noopener">Abrir painel</a></div></div>
+          <div id="projectKpis" class="info-grid"></div>
+          <div class="dashboard-grid" style="margin-top:17px">
+            <div class="panel"><div class="panel-head"><div><h2>Curva do projeto e tendência</h2><p>Seis semanas realizadas e projeção linear baseada no desempenho recente.</p></div></div><div class="panel-body"><div class="chart-box"><canvas id="projectCurveChart"></canvas></div></div></div>
+            <div id="projectSummary" class="summary-box"></div>
+          </div>
+          <div class="two-col" style="margin-top:17px">
+            <div class="panel"><div class="panel-head"><div><h2>Produtividade das últimas 6 semanas</h2><p>Relação entre HH agregada e HH real por semana.</p></div></div><div class="panel-body"><div class="chart-box small"><canvas id="projectProductivityChart"></canvas></div></div></div>
+            <div class="panel"><div class="panel-head"><div><h2>Avaliação gerencial</h2><p>Mobilização, restrições, plano de ação e parecer da diretoria.</p></div><button class="btn btn-light btn-small" onclick="openEvaluationModal()">Atualizar</button></div><div id="projectManagement" class="panel-body"></div></div>
+          </div>
+          <div class="panel"><div class="panel-head"><div><h2>Histórico das últimas 6 semanas</h2><p>Previsto, realizado, avanço semanal, desvio e produtividade.</p></div></div><div class="table-wrap"><table><thead><tr><th>Semana</th><th>Previsto acumulado</th><th>Realizado acumulado</th><th>Avanço da semana</th><th>Desvio acumulado</th><th>HH real</th><th>Produtividade</th></tr></thead><tbody id="weeklyHistoryBody"></tbody></table></div></div>
+        </section>
+
+        <section id="view-director" class="view">
+          <div class="page-head"><div><h1>Avaliação da Diretoria</h1><p>Ranking de criticidade, mobilização, ações e tendência de finalização das obras.</p></div><div class="head-actions"><select id="directorSelector" class="select" style="min-width:260px" onchange="selectDirectorProject(this.value)"></select><button class="btn btn-primary btn-small" onclick="openEvaluationModal(state.directorProjectId)">Registrar avaliação</button></div></div>
+          <div class="kpi-grid">
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Obra mais crítica</span><span class="kpi-icon">🚨</span></div><div id="directorCritical" class="kpi-value" style="font-size:18px">—</div><div id="directorCriticalHelp" class="kpi-help">—</div></article>
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Produtividade média</span><span class="kpi-icon">⚙️</span></div><div id="directorProductivity" class="kpi-value">0,0%</div><div class="kpi-help">Média das obras com dados</div></article>
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Tendência de atraso</span><span class="kpi-icon">⏳</span></div><div id="directorLate" class="kpi-value" style="color:#d97706">0</div><div class="kpi-help">Obras projetadas após o prazo</div></article>
+            <article class="kpi"><div class="kpi-top"><span class="kpi-label">Planos pendentes</span><span class="kpi-icon">📋</span></div><div id="directorActions" class="kpi-value" style="color:#7c3aed">0</div><div class="kpi-help">Obras sem plano de ação</div></article>
+          </div>
+          <div class="dashboard-grid">
+            <div class="panel"><div class="panel-head"><div><h2>Curva e tendência da obra selecionada</h2><p id="directorChartSubtitle">Selecione uma obra para análise.</p></div></div><div class="panel-body"><div class="chart-box"><canvas id="directorCurveChart"></canvas></div></div></div>
+            <div id="directorProjectSummary" class="summary-box"></div>
+          </div>
+          <div class="panel"><div class="panel-head"><div><h2>Ranking de criticidade</h2><p>Priorização automática considerando desvio, produtividade, prazo, mobilização e plano de ação.</p></div></div><div id="directorRanking" class="panel-body portfolio-ranking"></div></div>
+        </section>
+
+        <section id="view-audit" class="view">
+          <div class="page-head"><div><h1>Histórico de alterações</h1><p>Usuário, projeto, ação, data, horário e detalhes registrados.</p></div><div class="head-actions"><button class="btn btn-light btn-small" onclick="clearAuditFilters()">Limpar filtros</button><button class="btn btn-dark btn-small" onclick="exportAuditCSV()">Exportar CSV</button></div></div>
+          <div class="panel"><div class="filters"><input id="auditSearch" class="input" placeholder="Pesquisar usuário, ação ou detalhe..." oninput="renderAudit()"><select id="auditProjectFilter" class="select" onchange="renderAudit()"></select><select id="auditPeriodFilter" class="select" onchange="renderAudit()"><option value="">Todo o período</option><option value="1">Últimas 24 horas</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select></div><div class="table-wrap"><table><thead><tr><th>Data e hora</th><th>Usuário</th><th>Projeto</th><th>Ação</th><th>Detalhes</th></tr></thead><tbody id="auditBody"></tbody></table></div></div>
+        </section>
+      </main>
+    </div>
+  </section>
+
+  <div id="evaluationModal" class="modal-backdrop" onclick="if(event.target===this)closeEvaluationModal()"><div class="modal"><div class="modal-head"><h3>Avaliação executiva do projeto</h3><p id="evaluationProjectName"></p></div><div class="modal-body"><input id="evaluationProjectId" type="hidden"><div class="form-grid">
+    <div class="field"><label>Criticidade definida</label><select id="evalCriticality" class="select"><option value="auto">Automática</option><option value="stable">Estável</option><option value="attention">Atenção</option><option value="critical">Crítica</option></select></div>
+    <div class="field"><label>Mobilização</label><select id="evalMobilization" class="select"><option value="not_evaluated">Não avaliada</option><option value="adequate">Adequada</option><option value="partial">Parcial</option><option value="critical">Crítica</option></select></div>
+    <div class="field"><label>Fim contratual</label><input id="evalContractEnd" class="input" type="date"></div>
+    <div class="field"><label>Meta gerencial</label><input id="evalTargetEnd" class="input" type="date"></div>
+    <div class="field"><label>Fase atual</label><input id="evalStage" class="input" placeholder="Ex.: montagem eletromecânica"></div>
+    <div class="field"><label>Responsável pelo plano</label><input id="evalOwner" class="input" placeholder="Nome / área"></div>
+    <div class="field full"><label>Principais restrições</label><textarea id="evalRestrictions" class="textarea" placeholder="Materiais, engenharia, frentes, equipamentos, mão de obra..."></textarea></div>
+    <div class="field full"><label>Plano de ação</label><textarea id="evalActions" class="textarea" placeholder="Uma ação por linha, com responsável e prazo."></textarea></div>
+    <div class="field full"><label>Parecer da Diretoria</label><textarea id="evalOpinion" class="textarea" placeholder="Avaliação executiva, decisões e direcionamentos."></textarea></div>
+  </div><div class="modal-actions"><button class="btn btn-light" onclick="closeEvaluationModal()">Cancelar</button><button class="btn btn-primary" onclick="saveEvaluation()">Salvar avaliação</button></div></div></div></div>
+  <div id="toast" class="toast"></div>
+
+<script>
+'use strict';
+const ALLOWED_ADMIN_EMAILS=['paulo@kaefer.com'];
+const PROJECTS = [
+  {
+    id: 'fs-cnp',
+    name: 'FS Fueling Sustainability – Projeto SPCI - CNP',
+    short: 'FS CNP · SPCI',
+    url: 'https://ricardoprf.github.io/Painel-de-Bordo-FS-CNP-SPCI/',
+    firebase: {
+      apiKey: 'AIzaSyDFSe7tWTsyCo08Q4XHPpPvw5nz5pFHnj4',
+      authDomain: 'painel-de-bordo-fs-cnp.firebaseapp.com',
+      databaseURL: 'https://painel-de-bordo-fs-cnp-default-rtdb.firebaseio.com',
+      projectId: 'painel-de-bordo-fs-cnp',
+      storageBucket: 'painel-de-bordo-fs-cnp.firebasestorage.app',
+      messagingSenderId: '968571256747',
+      appId: '1:968571256747:web:a90764c0fbff29d4b55cee'
+    }
+  },
+  {
+    id: 'fs-cnp-etanol',
+    name: 'FS Fueling Sustainability – Projeto Etanol - CNP',
+    short: 'FS CNP · Etanol',
+    url: 'https://ricardoprf.github.io/Painel-de-Bordo-FS-CNP-Etanol/',
+    firebase: {
+      apiKey: 'AIzaSyBjkeffowsXcq9TuDP_DTnP-3L-mwsy3eQ',
+      authDomain: 'painel-de-bordo-fs-cnp-etanol.firebaseapp.com',
+      databaseURL: 'https://painel-de-bordo-fs-cnp-etanol-default-rtdb.firebaseio.com',
+      projectId: 'painel-de-bordo-fs-cnp-etanol',
+      storageBucket: 'painel-de-bordo-fs-cnp-etanol.firebasestorage.app',
+      messagingSenderId: '820826814911',
+      appId: '1:820826814911:web:d915aba8e88fc31266090a'
+    }
+  },
+  {
+    id: 'fs-cnp-utilidades',
+    name: 'FS Fueling Sustainability – Projeto Utilidades - CNP',
+    short: 'FS CNP · Utilidades',
+    url: 'https://ricardoprf.github.io/Painel-de-Bordo-FS-CNP-UTI/',
+    firebase: {
+      apiKey: 'AIzaSyDKF4K_d8o1AwYOAL7HnZ8Trm9nbJjqCZo',
+      authDomain: 'bora-dar-uma-banda-500213.firebaseapp.com',
+      databaseURL: 'https://bora-dar-uma-banda-500213-default-rtdb.firebaseio.com',
+      projectId: 'bora-dar-uma-banda-500213',
+      storageBucket: 'bora-dar-uma-banda-500213.firebasestorage.app',
+      messagingSenderId: '742290829177',
+      appId: '1:742290829177:web:573ae885cb17a9e01549a8'
+    }
+  },
+  {
+    id: 'andritz',
+    name: 'Klabin Linha 07 – Andritz',
+    short: 'Klabin · Andritz',
+    url: 'https://ricardoprf.github.io/Painel-de-Bordo-Andritz/',
+    firebase: {
+      apiKey: 'AIzaSyAW35OKtqp0sp6vBgC3QsDyB31nfO6gQyo',
+      databaseURL: 'https://painel-de-bordo-3f96a-default-rtdb.firebaseio.com'
+    }
+  },
+  {
+    id: 'beccs',
+    name: 'FS Fueling Sustainability – Projeto BECCS',
+    short: 'FS · BECCS',
+    url: 'https://ricardoprf.github.io/Painel-de-Bordo-FS-Beccs./',
+    detailKeys: ['fabricacao_tubulacao', 'montagem_tubulacao', 'suportes'],
+    firebase: {
+      apiKey: 'AIzaSyCy7V9drbdlzkE28zmWv2MXOqdIxDl-bak',
+      authDomain: 'painel-de-bordo-fs-beccs.firebaseapp.com',
+      databaseURL: 'https://painel-de-bordo-fs-beccs-default-rtdb.firebaseio.com',
+      projectId: 'painel-de-bordo-fs-beccs',
+      storageBucket: 'painel-de-bordo-fs-beccs.firebasestorage.app',
+      messagingSenderId: '1022297952334',
+      appId: '1:1022297952334:web:7ec790b7abdc65a620331f'
+    }
+  },
+  {
+    id: 'nouryon-clo2',
+    name: 'Nouryon – Dióxido de Cloro',
+    short: 'Nouryon · ClO₂',
+    url: 'https://ricardoprf.github.io/Painel-de-bordo-Nouryon-Dioxido-de-Cloro/',
+    firebase: {
+      apiKey: 'AIzaSyCrqxsycqH10Ff0gucUIFyea5ldz_Qsv8Q',
+      authDomain: 'painel-de-bordo-nouryon-clo2.firebaseapp.com',
+      databaseURL: 'https://painel-de-bordo-nouryon-clo2-default-rtdb.firebaseio.com',
+      projectId: 'painel-de-bordo-nouryon-clo2',
+      storageBucket: 'painel-de-bordo-nouryon-clo2.firebasestorage.app',
+      messagingSenderId: '763945285492',
+      appId: '1:763945285492:web:560b806947ef9a1dcf1e21'
+    }
+  },
+  {
+    id: 'nouryon-clorato',
+    name: 'Nouryon – Clorato',
+    short: 'Nouryon · Clorato',
+    url: 'https://ricardoprf.github.io/Painel-de-bordo-Nouryon-Clorato/',
+    firebase: {
+      apiKey: 'AIzaSyB8BkNplTzw_a5t1t34Dw2muvjW21ZtsBo',
+      authDomain: 'painel-de-bordo-nouryonclorato.firebaseapp.com',
+      databaseURL: 'https://painel-de-bordo-nouryonclorato-default-rtdb.firebaseio.com',
+      projectId: 'painel-de-bordo-nouryonclorato',
+      storageBucket: 'painel-de-bordo-nouryonclorato.firebasestorage.app',
+      messagingSenderId: '186694073073',
+      appId: '1:186694073073:web:bfe67e9d7ac9e5d8768750'
+    }
+  },
+  {
+    id: 'regenerador',
+    name: 'ArcelorMittal – Regenerador',
+    short: 'ArcelorMittal · Regenerador',
+    url: 'https://ricardoprf.github.io/Painel-de-bordo-Regenerador-/',
+    firebase: {
+      apiKey: 'AIzaSyDIMBxlIW2AIo-9z4jrdaQhoMsVwPOxdYU',
+      authDomain: 'painel-de-bordo-regenerador.firebaseapp.com',
+      databaseURL: 'https://painel-de-bordo-regenerador-default-rtdb.firebaseio.com',
+      projectId: 'painel-de-bordo-regenerador',
+      storageBucket: 'painel-de-bordo-regenerador.firebasestorage.app',
+      messagingSenderId: '189721273002',
+      appId: '1:189721273002:web:ee66ad005f0b1011dc26d3'
+    }
+  },
+  {
+    id: 'forno-panela',
+    name: 'ArcelorMittal – Forno Panela',
+    short: 'ArcelorMittal · Forno Panela',
+    url: 'https://ricardoprf.github.io/Painel-de-bordo-Forno-Panela/',
+    firebase: {
+      apiKey: 'AIzaSyDApKvF0exVr6psfty4uWfcG758_-_BqGc',
+      authDomain: 'painel-de-bordo-forno-panela.firebaseapp.com',
+      databaseURL: 'https://painel-de-bordo-forno-panela-default-rtdb.firebaseio.com',
+      projectId: 'painel-de-bordo-forno-panela',
+      storageBucket: 'painel-de-bordo-forno-panela.firebasestorage.app',
+      messagingSenderId: '240529628628',
+      appId: '1:240529628628:web:f4f3b3a012022a737a0a41'
+    }
+  }
+];
+const DETAIL_DEFAULT=new Set(['fabricacao_tubulacao','montagem_tubulacao','suportes']);
+const state={auth:null,centralDb:null,user:null,apps:{},dbs:{},raw:{},summaries:{},status:{},links:{},auditsByProject:{},centralAudits:[],evaluations:{},listenersStarted:false,selectedProjectId:'beccs',directorProjectId:'beccs',charts:{}};
+
+function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+function toList(v){if(Array.isArray(v))return v.filter(Boolean);if(v&&typeof v==='object')return Object.values(v).filter(Boolean);return[]}
+function numberValue(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return Number.isFinite(v)?v:0;let t=String(v).trim();if(!t||t==='-')return 0;const neg=/^\(.*\)$/.test(t);t=t.replace(/[()\s%]/g,'');if(t.includes(','))t=t.replace(/\./g,'').replace(',','.');const n=parseFloat(t);return Number.isFinite(n)?(neg?-n:n):0}
+function percentValue(v){const t=String(v??'');const n=numberValue(v);return t.includes('%')?n/100:n}
+function clamp(v,min,max){return Math.min(max,Math.max(min,v))}
+function formatPercent(v,d=2){return `${(Number(v||0)*100).toFixed(d).replace('.',',')}%`}
+function formatPP(v,d=2){const n=Number(v||0)*100;return `${n>0?'+':''}${n.toFixed(d).replace('.',',')} p.p.`}
+function formatHH(v){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function formatDate(v,short=false){const d=v instanceof Date?v:parseDate(v);if(!d)return'—';return short?d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):d.toLocaleDateString('pt-BR')}
+function formatDateTime(v){const d=v instanceof Date?v:parseDate(v);return d?d.toLocaleString('pt-BR'):'—'}
+function dateInputValue(v){const d=v instanceof Date?v:parseDate(v);if(!d)return'';const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return local.toISOString().slice(0,10)}
+function parseDate(v){if(!v)return null;if(v instanceof Date)return Number.isNaN(v.getTime())?null:v;if(typeof v==='number'){const d=new Date(v);return Number.isNaN(d.getTime())?null:d}const t=String(v).trim();const iso=t.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(iso)return new Date(Number(iso[1]),Number(iso[2])-1,Number(iso[3]));const br=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:[, ]+\s*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(br){let y=Number(br[3]);if(y<100)y+=2000;return new Date(y,Number(br[2])-1,Number(br[1]),Number(br[4]||0),Number(br[5]||0),Number(br[6]||0))}const d=new Date(t);return Number.isNaN(d.getTime())?null:d}
+function curveDate(r){return parseDate(r?.Data??r?.data??r?.Date??r?.DATA??r?.Dia??r?.dataReferencia??r?.Data_Referencia)}
+function curveWeek(r){return String(r?.Semana??r?.semana??r?.Week??r?.SEMANA??'').trim()}
+function curveReal(r){return percentValue(r?.Avanco_Realizado_Perc??r?.Realizado??r?.Percentual_Real??r?.['% Real']??r?.Real)}
+function curvePlanned(r){return percentValue(r?.Avanco_Previsto_Perc??r?.Previsto??r?.Percentual_Previsto??r?.['% Previsto']??r?.Planned)}
+function realHH(r){return numberValue(r?.HH_Real??r?.['HH Real']??r?.HH??r?.Horas??r?.Real)}
+function configHH(c){return numberValue(c?.hh??c?.HH??c?.hhContrato??c?.HH_Total??c?.horas)}
+function daysBetween(a,b){if(!a||!b)return null;return Math.round((b-a)/86400000)}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return x}
+function isoWeek(d){const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));x.setUTCDate(x.getUTCDate()+4-(x.getUTCDay()||7));const y=new Date(Date.UTC(x.getUTCFullYear(),0,1));return Math.ceil((((x-y)/86400000)+1)/7)}
+function weekMeta(date,label=''){if(date){const m=mondayOf(date);return{key:m.toISOString().slice(0,10),date:m,label:label||`S${String(isoWeek(m)).padStart(2,'0')}`}}const num=numberValue(String(label).replace(/\D/g,''));return{key:`week-${String(num).padStart(3,'0')}`,date:null,label:label||`S${String(num).padStart(2,'0')}`}}
+function normalizeText(v){return String(v??'').trim()}
+
+function activeKeys(data,project){const cfg=data?.config?.disciplinas||{};const detail=new Set(project.detailKeys||[...DETAIL_DEFAULT]);let keys=Object.keys(cfg).filter(k=>k!=='geral'&&!detail.has(k)&&cfg[k]?.ativo!==false);if(!keys.length&&data?.dados)keys=Object.keys(data.dados).filter(k=>!['legacy','geral'].includes(k)&&!detail.has(k));return keys}
+function calculateSummary(data,project){data=data||{};const config=data.config||{};const by=data.dados;if(by&&typeof by==='object'){const dc=config.disciplinas||{};const keys=activeKeys(data,project);let total=keys.reduce((s,k)=>s+configHH(dc[k]),0)||configHH(config);let agg=0,hh=0,has=false;keys.forEach(k=>{const d=by[k]||{},curve=toList(d.curva),hrs=toList(d.hh),ch=configHH(dc[k]);if(curve.length)has=true;const adv=curve.reduce((s,r)=>s+curveReal(r),0);agg+=adv*ch;hh+=hrs.reduce((s,r)=>s+realHH(r),0)});if(has&&total>0)return{advance:agg/total,hhReal:hh,productivity:hh>0?(agg/hh)*100:0,contractHH:total,source:project.id==='beccs'?'regra-oficial-beccs':'consolidado'};const fallback=by.geral||by.legacy||{};const curve=toList(fallback.curva);if(curve.length){const adv=curve.reduce((s,r)=>s+curveReal(r),0),real=toList(fallback.hh).reduce((s,r)=>s+realHH(r),0),ct=configHH(config)||total;return{advance:adv,hhReal:real,productivity:real>0?((adv*ct)/real)*100:0,contractHH:ct,source:'geral'}}}const curve=toList(data.curva),hrs=toList(data.hh),adv=curve.reduce((s,r)=>s+curveReal(r),0),real=hrs.reduce((s,r)=>s+realHH(r),0),ct=configHH(config);return{advance:adv,hhReal:real,productivity:real>0?((adv*ct)/real)*100:0,contractHH:ct,source:'simples'}}
+
+function extractRows(data,project){data=data||{};const config=data.config||{},by=data.dados;let contractHH=0,curveRows=[],hhRows=[];if(by&&typeof by==='object'){const dc=config.disciplinas||{},keys=activeKeys(data,project);contractHH=keys.reduce((s,k)=>s+configHH(dc[k]),0)||configHH(config);keys.forEach(k=>{const ch=configHH(dc[k]),factor=contractHH>0?ch/contractHH:0;toList(by[k]?.curva).forEach(r=>curveRows.push({date:curveDate(r),week:curveWeek(r),planned:curvePlanned(r)*factor,actual:curveReal(r)*factor}));toList(by[k]?.hh).forEach(r=>hhRows.push({date:curveDate(r),week:curveWeek(r),hh:realHH(r)}))});if(!curveRows.length){const fb=by.geral||by.legacy||{};contractHH=contractHH||configHH(config);toList(fb.curva).forEach(r=>curveRows.push({date:curveDate(r),week:curveWeek(r),planned:curvePlanned(r),actual:curveReal(r)}));toList(fb.hh).forEach(r=>hhRows.push({date:curveDate(r),week:curveWeek(r),hh:realHH(r)}))}}else{contractHH=configHH(config);toList(data.curva).forEach(r=>curveRows.push({date:curveDate(r),week:curveWeek(r),planned:curvePlanned(r),actual:curveReal(r)}));toList(data.hh).forEach(r=>hhRows.push({date:curveDate(r),week:curveWeek(r),hh:realHH(r)}))}return{contractHH,curveRows,hhRows}}
+function extractTimeSeries(data,project,summary){const {contractHH,curveRows,hhRows}=extractRows(data,project);const map=new Map();function groupFor(date,week){const meta=weekMeta(date,week);if(!map.has(meta.key))map.set(meta.key,{...meta,plannedInc:0,actualInc:0,hhReal:0});return map.get(meta.key)}curveRows.forEach(r=>{const g=groupFor(r.date,r.week);g.plannedInc+=r.planned;g.actualInc+=r.actual});hhRows.forEach(r=>{const g=groupFor(r.date,r.week);g.hhReal+=r.hh});let weeks=[...map.values()].sort((a,b)=>{if(a.date&&b.date)return a.date-b.date;if(a.date)return-1;if(b.date)return 1;return a.key.localeCompare(b.key)});let rawActual=weeks.reduce((s,w)=>s+w.actualInc,0);const official=summary?.advance||0;if(rawActual>0&&official>=0){const scale=official/rawActual;weeks.forEach(w=>w.actualInc*=scale)}let pc=0,ac=0;weeks.forEach(w=>{pc+=w.plannedInc;ac+=w.actualInc;w.plannedCum=pc;w.actualCum=ac;w.productivity=w.hhReal>0&&contractHH>0?(w.actualInc*contractHH/w.hhReal)*100:0});let lastObserved=-1;weeks.forEach((w,i)=>{if(w.actualInc>0.0000001||w.hhReal>0)lastObserved=i});if(lastObserved<0){const now=Date.now();weeks.forEach((w,i)=>{if(w.date&&w.date.getTime()<=now)lastObserved=i})}if(lastObserved<0&&weeks.length)lastObserved=weeks.length-1;const history=weeks.slice(Math.max(0,lastObserved-5),lastObserved+1);const currentWeek=weeks[lastObserved]||null;const contractPlanEnd=[...weeks].reverse().find(w=>w.date&&w.plannedInc>0)?.date||null;return{weeks,history,currentWeek,lastObserved,contractHH:contractHH||summary?.contractHH||0,contractPlanEnd}}
+function regression(points){if(points.length<2)return{slope:0,intercept:points[0]?.y||0};const n=points.length,sx=points.reduce((s,p)=>s+p.x,0),sy=points.reduce((s,p)=>s+p.y,0),sxy=points.reduce((s,p)=>s+p.x*p.y,0),sx2=points.reduce((s,p)=>s+p.x*p.x,0),den=n*sx2-sx*sx;if(!den)return{slope:0,intercept:sy/n};const slope=(n*sxy-sx*sy)/den;return{slope,intercept:(sy-slope*sx)/n}}
+function projectMetrics(project){const summary=state.summaries[project.id]||{advance:0,productivity:0,hhReal:0,contractHH:0};const series=extractTimeSeries(state.raw[project.id]||{},project,summary);const evaluation=state.evaluations[project.id]||readLocalEvaluation(project.id)||{};const current=series.currentWeek;const planned=current?.plannedCum||0,actual=summary.advance||current?.actualCum||0,deviation=actual-planned;const contractEnd=parseDate(evaluation.contractEnd)||series.contractPlanEnd;const trendPoints=series.history.map((w,i)=>({x:i,y:w.actualCum})).filter(p=>Number.isFinite(p.y));const reg=regression(trendPoints);let forecastEnd=null,weeksToFinish=null;if(actual>=.999){forecastEnd=current?.date||new Date();weeksToFinish=0}else if(reg.slope>0.0001&&current?.date){weeksToFinish=Math.ceil((1-actual)/reg.slope);if(weeksToFinish>=0&&weeksToFinish<=156)forecastEnd=addDays(current.date,weeksToFinish*7)}const forecastDelayDays=contractEnd&&forecastEnd?daysBetween(contractEnd,forecastEnd):null;let score=0;if(deviation<0)score+=Math.min(40,Math.abs(deviation*100)*2);if(summary.productivity>0&&summary.productivity<60)score+=25;else if(summary.productivity>0&&summary.productivity<80)score+=15;else if(summary.productivity>0&&summary.productivity<95)score+=6;if(forecastDelayDays>0)score+=Math.min(30,forecastDelayDays/3);if(evaluation.mobilization==='critical')score+=18;else if(evaluation.mobilization==='partial')score+=8;if(!normalizeText(evaluation.actions))score+=5;if(state.status[project.id]==='error')score+=10;let risk=actual>=.999?'done':score>=45?'critical':score>=20?'attention':'stable';if(['critical','attention','stable'].includes(evaluation.criticality))risk=evaluation.criticality;return{project,summary,series,evaluation,planned,actual,deviation,contractEnd,forecastEnd,weeksToFinish,forecastDelayDays,score,risk}}
+function allMetrics(){return PROJECTS.map(projectMetrics).sort((a,b)=>b.score-a.score)}
+function riskLabel(r){return{critical:'Crítica',attention:'Atenção',stable:'Estável',done:'Concluída'}[r]||'Sem avaliação'}
+function riskBadge(r){return`<span class="risk-badge risk-${r}">${riskLabel(r)}</span>`}
+function mobilizationLabel(v){return{adequate:'Adequada',partial:'Parcial',critical:'Crítica',not_evaluated:'Não avaliada'}[v]||'Não avaliada'}
+function deadlineState(m){if(!m.contractEnd||!m.forecastEnd)return'unknown';return m.forecastEnd>m.contractEnd?'late':'ontime'}
+function deadlineText(m){const s=deadlineState(m);if(s==='late')return`Atraso projetado de ${Math.max(1,m.forecastDelayDays)} dias`;if(s==='ontime')return'Mantém tendência no prazo';return'Prazo/tendência não identificado'}
+
+function findLatestMetadata(o,depth=0,found=[]){if(!o||typeof o!=='object'||depth>7)return found;Object.entries(o).forEach(([k,v])=>{const n=k.toLowerCase();if(['auditoria','logs','log'].includes(n))return;if(/atualizado|updated|alterado|salvoem|timestamp|datahora/.test(n)){const d=parseDate(v);if(d)found.push(d)}if(v&&typeof v==='object')findLatestMetadata(v,depth+1,found)});return found}
+function latestMetadata(data){const d=findLatestMetadata(data);d.sort((a,b)=>b-a);return d[0]||null}
+function normalizeAudit(item,project,isCentral=false){item=item||{};const projectId=item.projectId||item.projetoId||project?.id||'central',registered=PROJECTS.find(e=>e.id===projectId);return{id:[projectId,item.timestamp||item.dataHora||item.atualizadoEm||'',item.uid||item.userEmail||item.usuario||'',item.action||item.acao||item.tipo||''].join('|'),projectId,central:isCentral,date:parseDate(item.timestamp||item.dataHora||item.atualizadoEm||item.date)||new Date(0),user:item.userEmail||item.usuario||item.email||item.userName||'Não identificado',project:item.projectName||item.projeto||registered?.short||project?.short||'Central',action:item.action||item.acao||item.tipo||'Alteração',details:item.details||item.detalhes||item.descricao||item.arquivo||''}}
+function allAudits(){const combined=[...state.centralAudits,...Object.values(state.auditsByProject).flat()],unique=new Map();combined.forEach(i=>unique.set(i.id,i));return[...unique.values()].sort((a,b)=>b.date-a.date)}
+function projectUrl(p){return state.links[p.id]||localStorage.getItem(`central-link-${p.id}`)||p.url}
+function readLocalEvaluation(id){try{return JSON.parse(localStorage.getItem(`central-evaluation-${id}`)||'{}')}catch{return{}}}
+
+function initializeFirebase(){const beccs=PROJECTS.find(p=>p.id==='beccs');let app;try{app=firebase.app('central-admin-beccs')}catch{app=firebase.initializeApp(beccs.firebase,'central-admin-beccs')}state.apps.beccs=app;state.centralDb=app.database();state.auth=app.auth();state.auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(()=>{});state.auth.onAuthStateChanged(async user=>{document.getElementById('loadingScreen').classList.add('hidden');if(!user){document.getElementById('accessGate').classList.remove('hidden');return}const ok=ALLOWED_ADMIN_EMAILS.map(x=>x.toLowerCase()).includes(String(user.email||'').toLowerCase());if(!ok){await state.auth.signOut();document.getElementById('accessGate').classList.remove('hidden');return}state.user=user;document.getElementById('userEmail').textContent=user.email||'Administrador';document.getElementById('appView').classList.remove('hidden');if(!state.listenersStarted){startProjectListeners();startCentralListeners();state.listenersStarted=true}registerCentralEvent('Acesso à central executiva','central','Sessão administrativa validada')})}
+function startProjectListeners(){PROJECTS.forEach(project=>{try{let app=state.apps[project.id];if(!app){app=project.id==='beccs'?state.apps.beccs:firebase.initializeApp(project.firebase,`central-${project.id}`);state.apps[project.id]=app}const db=app.database();state.dbs[project.id]=db;state.status[project.id]='loading';db.ref('painel').on('value',snap=>{const data=snap.val();state.raw[project.id]=data||{};state.summaries[project.id]={...calculateSummary(data||{},project),lastUpdate:latestMetadata(data||{})};state.status[project.id]=data?'online':'error';updateSyncTime();renderAll()},()=>{state.status[project.id]='error';renderAll()});db.ref('painel/auditoria').limitToLast(500).on('value',snap=>{state.auditsByProject[project.id]=toList(snap.val()).map(i=>normalizeAudit(i,project,false));renderAudit()},()=>{state.auditsByProject[project.id]=[]})}catch(e){console.error(e);state.status[project.id]='error'}});populateSelectors();renderAll()}
+function startCentralListeners(){state.centralDb.ref('centralAdministrativa/links').on('value',snap=>{state.links=snap.val()||{};renderAll()});state.centralDb.ref('centralAdministrativa/auditoria').limitToLast(700).on('value',snap=>{state.centralAudits=toList(snap.val()).map(i=>normalizeAudit(i,null,true));renderAudit()});state.centralDb.ref('centralAdministrativa/avaliacoes').on('value',snap=>{state.evaluations=snap.val()||{};renderAll()},()=>{state.evaluations={};renderAll()})}
+async function registerCentralEvent(action,projectId='central',details=''){if(!state.centralDb||!state.user)return;const project=PROJECTS.find(p=>p.id===projectId);try{await state.centralDb.ref('centralAdministrativa/auditoria').push({timestamp:firebase.database.ServerValue.TIMESTAMP,userEmail:state.user.email||'',uid:state.user.uid||'',projectId,projectName:project?.short||'Central Executiva',action,details})}catch{}}
+async function logout(){await registerCentralEvent('Logout administrativo','central','Sessão encerrada');await state.auth.signOut();location.href='./index.html'}
+function updateSyncTime(){document.getElementById('lastSync').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+
+function openView(name,button){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.nav-button').forEach(v=>v.classList.remove('active'));document.getElementById(`view-${name}`).classList.add('active');if(button)button.classList.add('active');if(name==='project')renderProjectView();if(name==='director')renderDirector();if(name==='audit')renderAudit();window.scrollTo({top:0,behavior:'smooth'})}
+function populateSelectors(){const opts=PROJECTS.map(p=>`<option value="${p.id}">${escapeHtml(p.short)}</option>`).join('');['projectSelector','directorSelector'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts});document.getElementById('projectSelector').value=state.selectedProjectId;document.getElementById('directorSelector').value=state.directorProjectId}
+function selectProject(id){state.selectedProjectId=id;renderProjectView()}
+function selectDirectorProject(id){state.directorProjectId=id;renderDirectorSelected()}
+function openProject(id){state.selectedProjectId=id;document.getElementById('projectSelector').value=id;openView('project',document.querySelector('[data-view=project]'));registerCentralEvent('Análise executiva aberta',id,'Histórico de seis semanas consultado')}
+function statusMarkup(s){const c=s||'loading',l=c==='online'?'Conectado':c==='error'?'Indisponível':'Carregando';return`<span class="status status-${c}">${l}</span>`}
+
+function renderAll(){renderOverview();renderProjectView();renderDirector();renderAudit()}
+function renderOverview(){const metrics=allMetrics(),validDev=metrics.filter(m=>m.planned>0),critical=metrics.filter(m=>m.risk==='critical').length,onTime=metrics.filter(m=>deadlineState(m)==='ontime').length,avgDev=validDev.length?validDev.reduce((s,m)=>s+m.deviation,0)/validDev.length:0;document.getElementById('kpiProjects').textContent=PROJECTS.length;document.getElementById('kpiCritical').textContent=critical;document.getElementById('kpiOnTime').textContent=onTime;document.getElementById('kpiDeviation').textContent=formatPP(avgDev);const top=metrics[0];const card=document.getElementById('criticalProjectCard');if(top){card.className=`critical-card ${top.risk==='attention'?'attention':top.risk==='stable'||top.risk==='done'?'stable':''}`;card.innerHTML=`<h2>${top.risk==='critical'?'Obra crítica no momento':top.risk==='attention'?'Maior ponto de atenção':'Portfólio sem criticidade elevada'}: ${escapeHtml(top.project.short)}</h2><p>Realizado ${formatPercent(top.actual)}, previsto ${formatPercent(top.planned)}, desvio ${formatPP(top.deviation)} e produtividade ${top.summary.productivity?top.summary.productivity.toFixed(1).replace('.',',')+'%':'não calculada'}. ${deadlineText(top)}.</p>`}renderOverviewTable()}
+function renderOverviewTable(){const body=document.getElementById('overviewBody'),search=(document.getElementById('projectSearch')?.value||'').toLowerCase(),risk=document.getElementById('riskFilter')?.value||'',deadline=document.getElementById('deadlineFilter')?.value||'';const rows=allMetrics().filter(m=>(m.project.name.toLowerCase().includes(search)||m.project.short.toLowerCase().includes(search))&&(!risk||m.risk===risk)&&(!deadline||deadlineState(m)===deadline));if(!rows.length){body.innerHTML='<tr><td colspan="9" class="audit-empty">Nenhuma obra encontrada.</td></tr>';return}body.innerHTML=rows.map(m=>`<tr class="clickable-row" onclick="openProject('${m.project.id}')"><td><div class="project-name">${escapeHtml(m.project.short)}</div><div class="project-url">${statusMarkup(state.status[m.project.id])}</div></td><td>${riskBadge(m.risk)}</td><td>${m.planned?formatPercent(m.planned):'<span class="muted">—</span>'}</td><td><span class="number-blue">${formatPercent(m.actual)}</span></td><td class="${m.deviation<0?'number-red':'number-green'}">${m.planned?formatPP(m.deviation):'—'}</td><td class="${m.summary.productivity>=100?'number-green':m.summary.productivity>0?'number-red':'muted'}">${m.summary.productivity?m.summary.productivity.toFixed(1).replace('.',',')+'%':'—'}</td><td>${formatDate(m.contractEnd)}</td><td><strong>${formatDate(m.forecastEnd)}</strong><div class="project-url">${deadlineText(m)}</div></td><td><div class="action-row" onclick="event.stopPropagation()"><button class="btn btn-primary btn-small" onclick="openProject('${m.project.id}')">Analisar</button><a class="btn btn-dark btn-small" href="${escapeHtml(projectUrl(m.project))}" target="_blank" rel="noopener">Painel</a></div></td></tr>`).join('')}
+
+function buildForecastChart(m){const h=m.series.history;if(!h.length)return{labels:[],planned:[],actual:[],trend:[]};const pts=h.map((w,i)=>({x:i,y:w.actualCum})),reg=regression(pts),labels=h.map(w=>`${w.label} · ${w.date?formatDate(w.date,true):''}`),planned=h.map(w=>w.plannedCum*100),actual=h.map(w=>w.actualCum*100),trend=h.map((w,i)=>clamp(reg.intercept+reg.slope*i,0,1)*100);let baseDate=h[h.length-1].date||new Date(),baseIdx=h.length-1;const extra=Math.min(10,Math.max(4,m.weeksToFinish||4));for(let i=1;i<=extra;i++){const d=addDays(baseDate,i*7);labels.push(`S${String(isoWeek(d)).padStart(2,'0')} · ${formatDate(d,true)}`);const sourceWeek=m.series.weeks.find(w=>w.date&&mondayOf(w.date).getTime()===mondayOf(d).getTime());planned.push(sourceWeek?sourceWeek.plannedCum*100:null);actual.push(null);trend.push(clamp(reg.intercept+reg.slope*(baseIdx+i),0,1)*100)}return{labels,planned,actual,trend}}
+function destroyChart(name){if(state.charts[name]){state.charts[name].destroy();delete state.charts[name]}}
+function createCurveChart(canvasId,name,m){destroyChart(name);const canvas=document.getElementById(canvasId);if(!canvas||typeof Chart==='undefined')return;const d=buildForecastChart(m);state.charts[name]=new Chart(canvas,{type:'line',data:{labels:d.labels,datasets:[{label:'Previsto acumulado',data:d.planned,borderWidth:2,pointRadius:2,tension:.25,spanGaps:true},{label:'Realizado acumulado',data:d.actual,borderWidth:3,pointRadius:3,tension:.25,spanGaps:false},{label:'Tendência do realizado',data:d.trend,borderWidth:2,borderDash:[7,5],pointRadius:0,tension:0,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${Number(c.raw||0).toFixed(2).replace('.',',')}%`}}},scales:{y:{min:0,max:105,ticks:{callback:v=>v+'%',font:{size:9}},grid:{color:'#eef1f5'}},x:{ticks:{font:{size:9},maxRotation:0,autoSkip:true},grid:{display:false}}}}})}
+function createProductivityChart(m){destroyChart('projectProductivity');const canvas=document.getElementById('projectProductivityChart');if(!canvas||typeof Chart==='undefined')return;const h=m.series.history;state.charts.projectProductivity=new Chart(canvas,{type:'bar',data:{labels:h.map(w=>w.label),datasets:[{label:'Produtividade semanal',data:h.map(w=>w.productivity||0),borderWidth:0,borderRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Produtividade: ${Number(c.raw||0).toFixed(1).replace('.',',')}%`}}},scales:{y:{beginAtZero:true,suggestedMax:120,ticks:{callback:v=>v+'%',font:{size:9}},grid:{color:'#eef1f5'}},x:{grid:{display:false}}}}})}
+function executiveSummary(m){const prod=m.summary.productivity?m.summary.productivity.toFixed(1).replace('.',',')+'%':'não calculada',dev=m.planned?formatPP(m.deviation):'sem previsto identificado',mobil=mobilizationLabel(m.evaluation.mobilization);return`O projeto apresenta avanço realizado de ${formatPercent(m.actual)} frente a ${m.planned?formatPercent(m.planned):'um previsto ainda não identificado'}, resultando em desvio de ${dev}. A produtividade acumulada está em ${prod}. A mobilização foi classificada como ${mobil.toLowerCase()}. ${m.contractEnd?`O prazo de término considerado é ${formatDate(m.contractEnd)}.`:'O prazo contratual precisa ser confirmado na avaliação.'} ${m.forecastEnd?`Mantido o desempenho recente, a tendência aponta conclusão em ${formatDate(m.forecastEnd)}.`:'Ainda não há histórico suficiente para projetar a conclusão.'}`}
+function summaryBoxHtml(m){return`<h3>Resumo executivo</h3><p>${escapeHtml(executiveSummary(m))}</p><div class="summary-list"><div class="summary-item"><span>Situação</span><strong>${riskLabel(m.risk)}</strong></div><div class="summary-item"><span>Fim contratual</span><strong>${formatDate(m.contractEnd)}</strong></div><div class="summary-item"><span>Previsão tendência</span><strong>${formatDate(m.forecastEnd)}</strong></div><div class="summary-item"><span>Mobilização</span><strong>${mobilizationLabel(m.evaluation.mobilization)}</strong></div><div class="summary-item"><span>Plano de ação</span><strong>${normalizeText(m.evaluation.actions)?'Registrado':'Pendente'}</strong></div></div>`}
+function renderProjectView(){const project=PROJECTS.find(p=>p.id===state.selectedProjectId)||PROJECTS[0];if(!project)return;state.selectedProjectId=project.id;const selector=document.getElementById('projectSelector');if(selector)selector.value=project.id;const m=projectMetrics(project);document.getElementById('projectTitle').textContent=project.name;document.getElementById('openPanelButton').href=projectUrl(project);document.getElementById('projectKpis').innerHTML=`<div class="info-card"><span>Avanço previsto</span><strong>${m.planned?formatPercent(m.planned):'—'}</strong><small>Até o último fechamento</small></div><div class="info-card"><span>Avanço realizado</span><strong style="color:#2563eb">${formatPercent(m.actual)}</strong><small>Percentual oficial do painel</small></div><div class="info-card"><span>Desvio acumulado</span><strong style="color:${m.deviation<0?'#dc2626':'#059669'}">${m.planned?formatPP(m.deviation):'—'}</strong><small>Realizado menos previsto</small></div><div class="info-card"><span>Produtividade acumulada</span><strong>${m.summary.productivity?m.summary.productivity.toFixed(1).replace('.',',')+'%':'—'}</strong><small>${formatHH(m.summary.hhReal)} HH reais</small></div><div class="info-card"><span>Fim contratual</span><strong>${formatDate(m.contractEnd)}</strong><small>${m.evaluation.contractEnd?'Avaliação gerencial':'Última data prevista encontrada'}</small></div><div class="info-card"><span>Previsão tendência</span><strong>${formatDate(m.forecastEnd)}</strong><small>${deadlineText(m)}</small></div><div class="info-card"><span>Mobilização</span><strong>${mobilizationLabel(m.evaluation.mobilization)}</strong><small>${escapeHtml(m.evaluation.stage||'Fase não informada')}</small></div><div class="info-card"><span>Criticidade</span><strong>${riskLabel(m.risk)}</strong><small>Índice automático: ${m.score.toFixed(0)}</small></div>`;document.getElementById('projectSummary').innerHTML=summaryBoxHtml(m);renderManagement(m);renderWeeklyHistory(m);setTimeout(()=>{createCurveChart('projectCurveChart','projectCurve',m);createProductivityChart(m)},0)}
+function renderManagement(m){const e=m.evaluation,actions=normalizeText(e.actions),restr=normalizeText(e.restrictions),op=normalizeText(e.opinion);document.getElementById('projectManagement').innerHTML=`<div class="management-card"><h3>Mobilização e fase atual</h3><p><strong>${mobilizationLabel(e.mobilization)}</strong>${e.stage?` · ${escapeHtml(e.stage)}`:''}</p></div><div class="management-card" style="margin-top:10px"><h3>Principais restrições</h3>${restr?`<p>${escapeHtml(restr)}</p>`:'<div class="management-empty">Nenhuma restrição executiva registrada.</div>'}</div><div class="management-card" style="margin-top:10px"><h3>Plano de ação</h3>${actions?`<p>${escapeHtml(actions)}</p>`:'<div class="management-empty">Plano de ação ainda não registrado.</div>'}</div><div class="management-card" style="margin-top:10px"><h3>Parecer da Diretoria</h3>${op?`<p>${escapeHtml(op)}</p>`:'<div class="management-empty">Parecer ainda não registrado.</div>'}</div>${e.updatedAt?`<div class="project-url" style="margin-top:10px">Última avaliação: ${formatDateTime(e.updatedAt)} · ${escapeHtml(e.updatedBy||'')}</div>`:''}`}
+function renderWeeklyHistory(m){const body=document.getElementById('weeklyHistoryBody'),h=m.series.history;if(!h.length){body.innerHTML='<tr><td colspan="7" class="audit-empty">Não foi encontrado histórico semanal estruturado neste painel.</td></tr>';return}body.innerHTML=h.map(w=>`<tr><td><strong>${escapeHtml(w.label)}</strong><div class="project-url">${formatDate(w.date)}</div></td><td>${formatPercent(w.plannedCum)}</td><td class="number-blue">${formatPercent(w.actualCum)}</td><td>${formatPP(w.actualInc)}</td><td class="${w.actualCum-w.plannedCum<0?'number-red':'number-green'}">${formatPP(w.actualCum-w.plannedCum)}</td><td>${formatHH(w.hhReal)}</td><td class="${w.productivity>=100?'number-green':w.productivity>0?'number-red':'muted'}">${w.productivity?w.productivity.toFixed(1).replace('.',',')+'%':'—'}</td></tr>`).join('')}
+
+function renderDirector(){const metrics=allMetrics(),top=metrics[0],validProd=metrics.filter(m=>m.summary.productivity>0),avgProd=validProd.length?validProd.reduce((s,m)=>s+m.summary.productivity,0)/validProd.length:0,late=metrics.filter(m=>deadlineState(m)==='late').length,noActions=metrics.filter(m=>!normalizeText(m.evaluation.actions)).length;document.getElementById('directorCritical').textContent=top?.project.short||'—';document.getElementById('directorCriticalHelp').textContent=top?`${riskLabel(top.risk)} · índice ${top.score.toFixed(0)}`:'—';document.getElementById('directorProductivity').textContent=avgProd.toFixed(1).replace('.',',')+'%';document.getElementById('directorLate').textContent=late;document.getElementById('directorActions').textContent=noActions;document.getElementById('directorSelector').value=state.directorProjectId;document.getElementById('directorRanking').innerHTML=metrics.map((m,i)=>`<div class="ranking-item" onclick="state.directorProjectId='${m.project.id}';document.getElementById('directorSelector').value='${m.project.id}';renderDirectorSelected()"><div class="ranking-position">${i+1}</div><div class="ranking-project"><strong>${escapeHtml(m.project.short)}</strong><span>${deadlineText(m)}</span></div><div><span class="muted">Desvio</span><br><strong class="${m.deviation<0?'number-red':'number-green'}">${m.planned?formatPP(m.deviation):'—'}</strong></div><div><span class="muted">Prod.</span><br><strong>${m.summary.productivity?m.summary.productivity.toFixed(1).replace('.',',')+'%':'—'}</strong></div><div>${riskBadge(m.risk)}</div></div>`).join('');renderDirectorSelected()}
+function renderDirectorSelected(){const project=PROJECTS.find(p=>p.id===state.directorProjectId)||PROJECTS[0];state.directorProjectId=project.id;const m=projectMetrics(project);document.getElementById('directorChartSubtitle').textContent=`${project.name} · realizado ${formatPercent(m.actual)} · ${deadlineText(m)}`;document.getElementById('directorProjectSummary').innerHTML=summaryBoxHtml(m)+`<div style="margin-top:14px"><button class="btn btn-light btn-small" onclick="openProject('${project.id}')">Abrir análise completa</button></div>`;setTimeout(()=>createCurveChart('directorCurveChart','directorCurve',m),0)}
+
+function openEvaluationModal(id=state.selectedProjectId){const project=PROJECTS.find(p=>p.id===id)||PROJECTS[0],m=projectMetrics(project),e=m.evaluation;document.getElementById('evaluationProjectId').value=project.id;document.getElementById('evaluationProjectName').textContent=project.name;document.getElementById('evalCriticality').value=e.criticality||'auto';document.getElementById('evalMobilization').value=e.mobilization||'not_evaluated';document.getElementById('evalContractEnd').value=dateInputValue(e.contractEnd||m.contractEnd);document.getElementById('evalTargetEnd').value=dateInputValue(e.targetEnd);document.getElementById('evalStage').value=e.stage||'';document.getElementById('evalOwner').value=e.owner||'';document.getElementById('evalRestrictions').value=e.restrictions||'';document.getElementById('evalActions').value=e.actions||'';document.getElementById('evalOpinion').value=e.opinion||'';document.getElementById('evaluationModal').classList.add('open')}
+function closeEvaluationModal(){document.getElementById('evaluationModal').classList.remove('open')}
+async function saveEvaluation(){const id=document.getElementById('evaluationProjectId').value,payload={criticality:document.getElementById('evalCriticality').value,mobilization:document.getElementById('evalMobilization').value,contractEnd:document.getElementById('evalContractEnd').value||'',targetEnd:document.getElementById('evalTargetEnd').value||'',stage:document.getElementById('evalStage').value.trim(),owner:document.getElementById('evalOwner').value.trim(),restrictions:document.getElementById('evalRestrictions').value.trim(),actions:document.getElementById('evalActions').value.trim(),opinion:document.getElementById('evalOpinion').value.trim(),updatedAt:Date.now(),updatedBy:state.user?.email||''};state.evaluations[id]=payload;localStorage.setItem(`central-evaluation-${id}`,JSON.stringify(payload));try{await state.centralDb.ref(`centralAdministrativa/avaliacoes/${id}`).set(payload);toast('Avaliação salva no Firebase.')}catch(e){toast('Avaliação salva neste navegador; o Firebase bloqueou a gravação.')}await registerCentralEvent('Avaliação executiva atualizada',id,`Criticidade: ${payload.criticality}; mobilização: ${payload.mobilization}`);closeEvaluationModal();renderAll()}
+
+function filteredAudits(){const search=(document.getElementById('auditSearch')?.value||'').toLowerCase(),project=document.getElementById('auditProjectFilter')?.value||'',period=Number(document.getElementById('auditPeriodFilter')?.value||0),limit=period?Date.now()-period*86400000:0;return allAudits().filter(i=>(!search||[i.user,i.project,i.action,i.details].join(' ').toLowerCase().includes(search))&&(!project||i.projectId===project)&&(!limit||i.date.getTime()>=limit))}
+function renderAudit(){const sel=document.getElementById('auditProjectFilter');if(sel&&!sel.dataset.loaded){sel.innerHTML='<option value="">Todos os projetos</option>'+PROJECTS.map(p=>`<option value="${p.id}">${escapeHtml(p.short)}</option>`).join('')+'<option value="central">Central Executiva</option>';sel.dataset.loaded='1'}const body=document.getElementById('auditBody');if(!body)return;const rows=filteredAudits().slice(0,1000);body.innerHTML=rows.length?rows.map(i=>`<tr><td class="nowrap">${formatDateTime(i.date)}</td><td><strong>${escapeHtml(i.user)}</strong></td><td>${escapeHtml(i.project)}</td><td><strong>${escapeHtml(i.action)}</strong></td><td class="muted">${escapeHtml(i.details||'—')}</td></tr>`).join(''):'<tr><td colspan="5" class="audit-empty">Nenhum evento encontrado.</td></tr>'}
+function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditProjectFilter').value='';document.getElementById('auditPeriodFilter').value='';renderAudit()}
+function exportAuditCSV(){const rows=filteredAudits(),table=[['Data e hora','Usuário','Projeto','Ação','Detalhes'],...rows.map(i=>[formatDateTime(i.date),i.user,i.project,i.action,i.details])],csv=table.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n'),blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`auditoria-paineis-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(a.href);registerCentralEvent('Exportação de auditoria','central',`${rows.length} eventos exportados`)}
+async function refreshAll(){PROJECTS.forEach(p=>{const d=state.raw[p.id];if(d)state.summaries[p.id]={...calculateSummary(d,p),lastUpdate:latestMetadata(d)}});updateSyncTime();renderAll();await registerCentralEvent('Atualização manual','central','Indicadores executivos recalculados');toast('Indicadores atualizados.')}
+function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>e.classList.remove('show'),2800)}
+window.addEventListener('error',e=>console.error('Erro na central:',e.error||e.message));
+initializeFirebase();
+</script>
+</body>
+</html>
