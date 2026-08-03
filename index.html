@@ -743,7 +743,93 @@ function atualizarCard(id, avancoRealAcm, hhRealAcm, prodAcm, dataInicio='', dat
     atualizarStatusProjeto(id, perc, dataInicio, dataFim);
 }
 
-function calcularResumoPainel(data) {
+function listaFirebase(valor) {
+    if (Array.isArray(valor)) return valor.filter(Boolean);
+    if (valor && typeof valor === 'object') {
+        return Object.keys(valor)
+            .filter(k => !['meta', 'metadata', 'arquivo', 'atualizadoEm'].includes(k))
+            .sort((a, b) => {
+                const na = Number(a), nb = Number(b);
+                return Number.isFinite(na) && Number.isFinite(nb)
+                    ? na - nb
+                    : String(a).localeCompare(String(b));
+            })
+            .map(k => valor[k])
+            .filter(v => v && typeof v === 'object');
+    }
+    return [];
+}
+
+function calcularResumoBeccs(data) {
+    const cfg = data.config || {};
+    const disciplinasCfg = cfg.disciplinas || {};
+    const dadosPorDisciplina = data.dados || {};
+
+    // Mesma consolidação usada no painel BECCS:
+    // Tubulação é a disciplina macro. Fabricação, Montagem e Suportes são
+    // apenas detalhamentos e não podem entrar novamente no avanço/HH geral.
+    const disciplinasMacro = [
+        'eletrica',
+        'mecanica',
+        'tubulacao',
+        'equipamentos',
+        'estrutura',
+        'instrumentacao',
+        'automacao',
+        'comissionamento'
+    ];
+
+    // O painel usa o HH integral das disciplinas macro como denominador,
+    // inclusive quando alguma ainda não possui curva importada.
+    const hhContratoTotal = disciplinasMacro.reduce((total, key) => {
+        return total + (Number(disciplinasCfg[key]?.hh) || 0);
+    }, 0) || Number(cfg.hh) || 0;
+
+    let hhAgregadoTotal = 0;
+    let hhRealTotal = 0;
+    let temCurva = false;
+
+    disciplinasMacro.forEach(key => {
+        const cfgDisc = disciplinasCfg[key] || {};
+        if (cfgDisc.ativo === false) return;
+
+        const hhContratoDisc = Number(cfgDisc.hh) || 0;
+        const curva = listaFirebase(dadosPorDisciplina[key]?.curva);
+        const hh = listaFirebase(dadosPorDisciplina[key]?.hh);
+
+        const avancoRealDisc = curva.reduce((a, c) => {
+            return a + valorPercentual(
+                c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']
+            );
+        }, 0);
+
+        if (curva.length) {
+            temCurva = true;
+            hhAgregadoTotal += avancoRealDisc * hhContratoDisc;
+        }
+
+        hhRealTotal += hh.reduce((a, c) => {
+            return a + numeroPlanilha(c.HH_Real ?? c['HH Real'] ?? c.HH);
+        }, 0);
+    });
+
+    const avancoProjeto = hhContratoTotal > 0 ? hhAgregadoTotal / hhContratoTotal : 0;
+    const produtividade = hhRealTotal > 0 ? (hhAgregadoTotal / hhRealTotal) * 100 : 0;
+
+    return {
+        avancoRealAcm: temCurva ? avancoProjeto : 0,
+        hhRealAcm: hhRealTotal,
+        prodAcm: produtividade,
+        dataInicio: cfg.inicio || '',
+        dataFim: cfg.fim || ''
+    };
+}
+
+function calcularResumoPainel(data, id='') {
+    // O cartão do BECCS precisa seguir exatamente a regra do painel interno,
+    // que exclui as disciplinas de detalhe da consolidação geral.
+    if (id === 'syngenta') return calcularResumoBeccs(data);
+
     const cfg = data.config || {};
     const disciplinasCfg = cfg.disciplinas || {};
     const dadosPorDisciplina = data.dados || null;
@@ -763,8 +849,8 @@ function calcularResumoPainel(data) {
             const hhContratoDisc = Number(cfgDisc.hh) || 0;
             hhContratoTotal += hhContratoDisc;
 
-            const curva = Array.isArray(dadosPorDisciplina[key]?.curva) ? dadosPorDisciplina[key].curva : [];
-            const hh = Array.isArray(dadosPorDisciplina[key]?.hh) ? dadosPorDisciplina[key].hh : [];
+            const curva = listaFirebase(dadosPorDisciplina[key]?.curva);
+            const hh = listaFirebase(dadosPorDisciplina[key]?.hh);
 
             const avancoRealDisc = curva.reduce((a, c) => {
                 return a + valorPercentual(c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']);
@@ -793,8 +879,8 @@ function calcularResumoPainel(data) {
     }
 
     // Estrutura antiga: painel/curva e painel/hh
-    const curvaLegada = Array.isArray(data.curva) ? data.curva : [];
-    const hhLegado = Array.isArray(data.hh) ? data.hh : [];
+    const curvaLegada = listaFirebase(data.curva);
+    const hhLegado = listaFirebase(data.hh);
     const hhContrato = Number(cfg.hh) || 0;
     const avancoRealAcm = curvaLegada.reduce((a, c) => {
         return a + valorPercentual(c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']);
@@ -823,7 +909,7 @@ function iniciarConexao(id, config) {
                 return;
             }
 
-            const resumo = calcularResumoPainel(data);
+            const resumo = calcularResumoPainel(data, id);
             atualizarCard(
                 id,
                 resumo.avancoRealAcm,
