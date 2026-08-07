@@ -825,7 +825,196 @@ function calcularResumoBeccs(data) {
     };
 }
 
+function calcularResumoEtanol(data) {
+    const cfg = data.config || {};
+    const disciplinasCfg = cfg.disciplinas || {};
+    const dadosPorDisciplina = data.dados || null;
+
+    // ETANOL: replica o Painel Geral interno, inclusive a MESMA data/semana de corte.
+    // Isso evita que o portfólio some HH de semanas futuras e derrube a produtividade.
+    if (dadosPorDisciplina && typeof dadosPorDisciplina === 'object') {
+        const detalhesTubulacao = new Set([
+            'fabricacao_tubulacao',
+            'montagem_tubulacao',
+            'suportes'
+        ]);
+
+        const disciplinasConhecidas = [
+            'eletrica',
+            'mecanica',
+            'tubulacao',
+            'fabricacao_tubulacao',
+            'montagem_tubulacao',
+            'suportes',
+            'equipamentos',
+            'estrutura',
+            'instrumentacao',
+            'automacao',
+            'comissionamento'
+        ];
+
+        const ativa = key => (disciplinasCfg[key] || {}).ativo !== false;
+        const tubulacaoMacroAtiva = ativa('tubulacao');
+        const consolidaNoGeral = key => {
+            if (key === 'tubulacao') return tubulacaoMacroAtiva;
+            if (detalhesTubulacao.has(key)) return !tubulacaoMacroAtiva && ativa(key);
+            return true;
+        };
+
+        const chavesGeral = disciplinasConhecidas.filter(key => consolidaNoGeral(key) && ativa(key));
+
+        // Mesmo HH Total Geral do painel interno.
+        let hhContratoTotal = disciplinasConhecidas
+            .filter(consolidaNoGeral)
+            .reduce((total, key) => total + (Number(disciplinasCfg[key]?.hh) || 0), 0);
+        if (!hhContratoTotal) hhContratoTotal = Number(cfg.hh) || 0;
+
+        const normalizarTextoEtanol = valor => String(valor || '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
+        const normalizarSemanaEtanol = sem => {
+            const txtOriginal = String(sem || '').trim();
+            const txt = normalizarTextoEtanol(txtOriginal);
+            const m = txt.match(/S\s*0*(\d+)/);
+            if (m) {
+                const n = parseInt(m[1], 10);
+                if (Number.isFinite(n)) return n === 0 ? 'S00' : 'S' + String(n).padStart(2, '0');
+            }
+            return txtOriginal ? txtOriginal.toUpperCase() : '';
+        };
+        const numeroSemanaEtanol = sem => {
+            const m = normalizarSemanaEtanol(sem).match(/^S(\d+)$/i);
+            return m ? parseInt(m[1], 10) : 9999;
+        };
+        const normalizarDiaEtanol = dia => normalizarTextoEtanol(dia).slice(0, 3);
+        const DIA_OFFSET_ETANOL = { SEG:0, TER:1, QUA:2, QUI:3, SEX:4, SAB:5, DOM:6 };
+
+        // Curva geral ponderada exatamente pela base contratual.
+        const mapaCurva = {};
+        chavesGeral.forEach(key => {
+            const hhDisc = Number(disciplinasCfg[key]?.hh) || 0;
+            const peso = hhContratoTotal > 0 ? hhDisc / hhContratoTotal : 0;
+            listaFirebase(dadosPorDisciplina[key]?.curva).forEach(r => {
+                const semana = normalizarSemanaEtanol(r.Semana);
+                const dia = r.Dia || '';
+                const k = semana + '|' + normalizarDiaEtanol(dia);
+                if (!mapaCurva[k]) mapaCurva[k] = { Semana:semana, Dia:dia, Real:0 };
+                mapaCurva[k].Real += valorPercentual(
+                    r.Avanco_Realizado_Perc ?? r.Realizado ?? r.Percentual_Real ?? r['% Real']
+                ) * peso;
+            });
+        });
+        const curvaGeral = Object.values(mapaCurva);
+
+        // HH geral sem duplicar Tubulação + detalhamentos.
+        const mapaHH = {};
+        chavesGeral.forEach(key => {
+            listaFirebase(dadosPorDisciplina[key]?.hh).forEach(r => {
+                const semana = normalizarSemanaEtanol(r.Semana);
+                const dia = r.Dia || '';
+                const k = semana + '|' + normalizarDiaEtanol(dia);
+                if (!mapaHH[k]) mapaHH[k] = { Semana:semana, Dia:dia, HH_Real:0 };
+                mapaHH[k].HH_Real += numeroPlanilha(r.HH_Real ?? r['HH Real'] ?? r.HH);
+            });
+        });
+        const hhGeral = Object.values(mapaHH);
+
+        const semanas = [...new Set(curvaGeral.map(r => normalizarSemanaEtanol(r.Semana)))]
+            .filter(Boolean)
+            .sort((a,b) => numeroSemanaEtanol(a) - numeroSemanaEtanol(b));
+
+        // O painel interno abre na última semana que possui avanço REAL realizado.
+        const realizadoPorSemana = {};
+        curvaGeral.forEach(r => {
+            const s = normalizarSemanaEtanol(r.Semana);
+            realizadoPorSemana[s] = (realizadoPorSemana[s] || 0) + Math.abs(Number(r.Real) || 0);
+        });
+        const semanasComReal = semanas.filter(s => (realizadoPorSemana[s] || 0) > 0.0000001);
+        const semanaCorte = semanasComReal.at(-1) || semanas.at(-1) || '';
+
+        // Mesmo ciclo selecionado no painel Etanol. Como os dois rodam em ricardoprf.github.io,
+        // o localStorage é compartilhado entre as pastas do GitHub Pages.
+        let cicloSemanalEtanol = 'segunda';
+        try {
+            cicloSemanalEtanol = localStorage.getItem('painelFechamentoSemanalCNP_etanol') || 'segunda';
+        } catch (e) {}
+        cicloSemanalEtanol = cicloSemanalEtanol === 'sexta' ? 'sexta' : 'segunda';
+
+        const dataBase = (() => {
+            const d = cfg.inicio ? new Date(cfg.inicio + 'T12:00:00') : new Date('2026-03-02T12:00:00');
+            const offset = d.getDay() === 0 ? -6 : 1 - d.getDay();
+            d.setDate(d.getDate() + offset);
+            return d;
+        })();
+
+        const indiceSemana = s => {
+            const idx = semanas.indexOf(normalizarSemanaEtanol(s));
+            if (idx >= 0) return idx;
+            const primeiro = semanas.length ? numeroSemanaEtanol(semanas[0]) : 1;
+            return Math.max(0, numeroSemanaEtanol(s) - primeiro);
+        };
+
+        const dataRegistro = r => {
+            const d = new Date(dataBase);
+            const idx = indiceSemana(r.Semana);
+            const diaIdx = DIA_OFFSET_ETANOL[normalizarDiaEtanol(r.Dia)] ?? 0;
+            d.setDate(d.getDate() + idx * 7 + diaIdx);
+            return d;
+        };
+
+        let dataFimCorte = null;
+        if (semanaCorte) {
+            const inicio = new Date(dataBase);
+            if (cicloSemanalEtanol === 'sexta') inicio.setDate(inicio.getDate() - 3);
+            inicio.setDate(inicio.getDate() + indiceSemana(semanaCorte) * 7);
+            dataFimCorte = new Date(inicio);
+            dataFimCorte.setDate(dataFimCorte.getDate() + 6);
+        }
+
+        // Soma somente até a MESMA data de corte exibida no painel interno.
+        const curvaAteCorte = dataFimCorte
+            ? curvaGeral.filter(r => dataRegistro(r) <= dataFimCorte)
+            : curvaGeral;
+        const hhAteCorte = dataFimCorte
+            ? hhGeral.filter(r => dataRegistro(r) <= dataFimCorte)
+            : hhGeral;
+
+        const avancoRealAcm = curvaAteCorte.reduce((a, r) => a + (Number(r.Real) || 0), 0);
+        const hhRealAcm = hhAteCorte.reduce((a, r) => a + numeroPlanilha(r.HH_Real), 0);
+        const hhAgregadoAcm = avancoRealAcm * hhContratoTotal;
+        const prodAcm = hhRealAcm > 0 ? (hhAgregadoAcm / hhRealAcm) * 100 : 0;
+
+        return {
+            avancoRealAcm,
+            hhRealAcm,
+            prodAcm,
+            dataInicio: cfg.inicio || '',
+            dataFim: cfg.fim || ''
+        };
+    }
+
+    // Compatibilidade com eventual estrutura antiga do Firebase.
+    const curvaLegada = listaFirebase(data.curva);
+    const hhLegado = listaFirebase(data.hh);
+    const hhContrato = Number(cfg.hh) || 0;
+    const avancoRealAcm = curvaLegada.reduce((a, c) => {
+        return a + valorPercentual(c.Avanco_Realizado_Perc ?? c.Realizado ?? c.Percentual_Real ?? c['% Real']);
+    }, 0);
+    const hhRealAcm = hhLegado.reduce((a, c) => a + numeroPlanilha(c.HH_Real ?? c['HH Real'] ?? c.HH), 0);
+    const prodAcm = hhRealAcm > 0 ? ((avancoRealAcm * hhContrato) / hhRealAcm) * 100 : 0;
+
+    return {
+        avancoRealAcm,
+        hhRealAcm,
+        prodAcm,
+        dataInicio: cfg.inicio || '',
+        dataFim: cfg.fim || ''
+    };
+}
+
 function calcularResumoPainel(data, id='') {
+    // Etanol usa a mesma regra dinâmica de consolidação do painel interno.
+    if (id === 'fs-cnp-etanol') return calcularResumoEtanol(data);
+
     // O cartão do BECCS precisa seguir exatamente a regra do painel interno,
     // que exclui as disciplinas de detalhe da consolidação geral.
     if (id === 'syngenta') return calcularResumoBeccs(data);
