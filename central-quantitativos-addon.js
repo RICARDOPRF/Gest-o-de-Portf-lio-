@@ -1,0 +1,119 @@
+(function(){
+  const oldChart=document.getElementById('simulatorChart');
+  if(oldChart){const panel=oldChart.closest('.panel');if(panel)panel.remove();}
+
+  const css=document.createElement('style');
+  css.textContent=`
+    .qty-sim-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+    .qty-sim-controls .field{margin:0}.qty-sim-table table{min-width:960px}.qty-sim-table .input{min-width:100px}
+    .qty-sim-table .qty-service{min-width:180px}.qty-sim-table .qty-unit{min-width:80px}.qty-sim-table td{padding:9px 10px}
+    .qty-sim-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-top:16px}
+    .qty-sim-note{margin-top:14px;padding:15px;border-radius:13px;background:linear-gradient(135deg,#172554,#1e3a8a);color:#fff;font-size:11px;line-height:1.65}
+    .qty-sim-actions{display:flex;gap:8px;flex-wrap:wrap}.qty-mini{font-size:9px;color:#7b8799;margin-top:5px;display:block}
+    @media(max-width:1000px){.qty-sim-controls{grid-template-columns:repeat(2,1fr)}.qty-sim-results{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:560px){.qty-sim-controls,.qty-sim-results{grid-template-columns:1fr}}
+  `;
+  document.head.appendChild(css);
+
+  const curveCanvas=document.getElementById('simulatorCurveChart');
+  const curvePanel=curveCanvas?.closest('.panel');
+  if(curvePanel && !document.getElementById('quantitySimulatorPanel')){
+    const panel=document.createElement('div');
+    panel.id='quantitySimulatorPanel';
+    panel.className='panel';
+    panel.style.marginTop='17px';
+    panel.innerHTML=`
+      <div class="panel-head">
+        <div><h2>Simulação por quantitativos e índices</h2><p>Calcule HH necessárias, prazo e efetivo com base no saldo de quantitativos, índices de HH/unidade e produtividade.</p></div>
+        <div class="qty-sim-actions"><button id="qtyCopyTeam" class="btn btn-light btn-small">Copiar equipe da simulação acima</button><button id="qtyAddItem" class="btn btn-primary btn-small">+ Adicionar item</button></div>
+      </div>
+      <div class="panel-body">
+        <div class="qty-sim-controls">
+          <div class="field"><label>Produtividade a utilizar</label><select id="qtyProdMode" class="select"><option value="current">Produtividade média atual</option><option value="manual">Produtividade definida por mim</option></select><small id="qtyCurrentProd" class="qty-mini">Média atual: —</small></div>
+          <div class="field"><label>Produtividade manual (%)</label><input id="qtyProdManual" class="input" type="number" min="1" max="200" step="0.1" value="100"></div>
+          <div class="field"><label>Pessoas disponíveis</label><input id="qtyPeople" class="input" type="number" min="1" step="1" value="96"></div>
+          <div class="field"><label>Jornada por pessoa/dia</label><input id="qtyHoursDay" class="input" type="number" min="1" max="24" step="0.5" value="9"></div>
+          <div class="field"><label>Dias trabalhados/semana</label><select id="qtyDaysWeek" class="select"><option value="5">5 dias · Seg–Sex</option><option value="6">6 dias · Seg–Sáb</option><option value="7">7 dias · Todos os dias</option></select></div>
+          <div class="field"><label>Data-alvo</label><input id="qtyTargetDate" class="input" type="date"></div>
+        </div>
+        <div class="table-wrap qty-sim-table"><table><thead><tr><th>Serviço / disciplina</th><th>Unid.</th><th>Quantidade total</th><th>Executado</th><th>Saldo</th><th>Índice HH/unid.</th><th>HH base do saldo</th><th></th></tr></thead><tbody id="qtySimBody"></tbody></table></div>
+        <div id="qtySimResults" class="qty-sim-results"></div>
+        <div id="qtySimNarrative" class="qty-sim-note"></div>
+      </div>`;
+    curvePanel.insertAdjacentElement('afterend',panel);
+  }
+
+  const body=document.getElementById('qtySimBody');
+  if(!body)return;
+  let loadedProject=null;
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const num=v=>{const n=Number(String(v??'').replace(',','.'));return Number.isFinite(n)?n:0};
+  const storageKey=id=>`central-quantity-simulator-${id}`;
+  const currentProject=()=>PROJECTS.find(p=>p.id===state.simulatorProjectId)||PROJECTS[0];
+  const currentMetrics=()=>projectMetrics(currentProject());
+
+  function collectRows(){
+    return [...body.querySelectorAll('tr')].map(tr=>({
+      service:tr.querySelector('.qty-service')?.value||'',unit:tr.querySelector('.qty-unit')?.value||'',
+      total:num(tr.querySelector('.qty-total')?.value),executed:num(tr.querySelector('.qty-executed')?.value),index:num(tr.querySelector('.qty-index')?.value)
+    }));
+  }
+  function renderRows(items){
+    body.innerHTML=(items?.length?items:[{service:'Serviço / disciplina',unit:'un',total:100,executed:0,index:1}]).map((item,i)=>`<tr data-row="${i}">
+      <td><input class="input qty-service" value="${esc(item.service)}" placeholder="Ex.: Tubulação AC"></td>
+      <td><input class="input qty-unit" value="${esc(item.unit||'un')}" placeholder="t, m, un"></td>
+      <td><input class="input qty-total" type="number" min="0" step="0.01" value="${num(item.total)}"></td>
+      <td><input class="input qty-executed" type="number" min="0" step="0.01" value="${num(item.executed)}"></td>
+      <td class="qty-balance"><strong>0</strong></td>
+      <td><input class="input qty-index" type="number" min="0" step="0.0001" value="${num(item.index)}"></td>
+      <td class="qty-basehh"><strong>0 HH</strong></td>
+      <td><button class="btn btn-danger btn-small qty-remove" type="button">Excluir</button></td>
+    </tr>`).join('');
+    body.querySelectorAll('input').forEach(el=>el.addEventListener('input',calculate));
+    body.querySelectorAll('.qty-remove').forEach(btn=>btn.addEventListener('click',()=>{btn.closest('tr')?.remove();if(!body.children.length)renderRows([{service:'Serviço / disciplina',unit:'un',total:0,executed:0,index:0}]);calculate();}));
+    calculate();
+  }
+  function save(){
+    const id=currentProject().id;
+    const payload={mode:document.getElementById('qtyProdMode').value,manual:num(document.getElementById('qtyProdManual').value),people:num(document.getElementById('qtyPeople').value),hours:num(document.getElementById('qtyHoursDay').value),days:Number(document.getElementById('qtyDaysWeek').value)||6,target:document.getElementById('qtyTargetDate').value||'',items:collectRows()};
+    localStorage.setItem(storageKey(id),JSON.stringify(payload));
+  }
+  function calculate(){
+    const m=currentMetrics(),mode=document.getElementById('qtyProdMode').value,currentProd=m.hh.productivity>0?m.hh.productivity:1,manual=Math.max(.01,num(document.getElementById('qtyProdManual').value)/100),prod=mode==='current'?currentProd:manual;
+    document.getElementById('qtyProdManual').disabled=mode==='current';
+    document.getElementById('qtyCurrentProd').textContent=`Média atual: ${m.hh.productivity>0?(m.hh.productivity*100).toFixed(1).replace('.',',')+'%':'sem histórico — usando 100%'}`;
+    const rows=[...body.querySelectorAll('tr')];let baseHH=0,services=0;
+    rows.forEach(tr=>{const total=num(tr.querySelector('.qty-total')?.value),executed=num(tr.querySelector('.qty-executed')?.value),idx=num(tr.querySelector('.qty-index')?.value),balance=Math.max(0,total-executed),hh=balance*idx;baseHH+=hh;if(balance>0&&idx>0)services++;tr.querySelector('.qty-balance').innerHTML=`<strong>${balance.toLocaleString('pt-BR',{maximumFractionDigits:2})}</strong>`;tr.querySelector('.qty-basehh').innerHTML=`<strong>${hh.toLocaleString('pt-BR',{maximumFractionDigits:0})} HH</strong>`;});
+    const people=Math.max(1,num(document.getElementById('qtyPeople').value)||1),hours=Math.max(.1,num(document.getElementById('qtyHoursDay').value)||9),daysWeek=Number(document.getElementById('qtyDaysWeek').value)||6,start=parseDate(document.getElementById('simStartDate')?.value)||new Date(),target=parseDate(document.getElementById('qtyTargetDate').value),realHH=prod>0?baseHH/prod:0,dailyReal=people*hours,dailyBase=dailyReal*prod,productiveDays=dailyBase>0?baseHH/dailyBase:0,finish=productiveDays>0?addWorkingDays(start,Math.ceil(productiveDays),daysWeek):start,availableDays=target?countWorkingDays(start,target,daysWeek):0,requiredPeople=availableDays>0&&hours>0?realHH/(availableDays*hours):null,teamDelta=requiredPeople===null?null:people-requiredPeople;
+    document.getElementById('qtySimResults').innerHTML=`
+      <div class="sim-result"><span>HH base do saldo</span><strong>${baseHH.toLocaleString('pt-BR',{maximumFractionDigits:0})} HH</strong><small>${services} serviços com saldo e índice</small></div>
+      <div class="sim-result"><span>Produtividade usada</span><strong>${(prod*100).toFixed(1).replace('.',',')}%</strong><small>${mode==='current'?'Média acumulada atual':'Meta definida manualmente'}</small></div>
+      <div class="sim-result"><span>HH reais necessárias</span><strong>${realHH.toLocaleString('pt-BR',{maximumFractionDigits:0})} HH</strong><small>HH base ÷ produtividade</small></div>
+      <div class="sim-result"><span>Capacidade produtiva</span><strong>${dailyBase.toLocaleString('pt-BR',{maximumFractionDigits:0})} HH/dia</strong><small>${people} pessoas × ${hours.toFixed(1).replace('.',',')} h × produtividade</small></div>
+      <div class="sim-result"><span>Dias produtivos necessários</span><strong>${productiveDays.toFixed(1).replace('.',',')}</strong><small>${daysWeek} dias trabalhados por semana</small></div>
+      <div class="sim-result"><span>Término projetado</span><strong>${formatDate(finish)}</strong><small>Com o efetivo disponível informado</small></div>
+      <div class="sim-result"><span>Pessoas necessárias p/ meta</span><strong>${requiredPeople===null?'—':requiredPeople.toFixed(1).replace('.',',')}</strong><small>${availableDays||0} dias produtivos até a data-alvo</small></div>
+      <div class="sim-result"><span>Folga / déficit de equipe</span><strong class="${teamDelta!==null&&teamDelta<0?'number-red':'number-green'}">${teamDelta===null?'—':(teamDelta>0?'+':'')+teamDelta.toFixed(1).replace('.',',')}</strong><small>${teamDelta===null?'Informe uma data-alvo':teamDelta>=0?'Pessoas acima da necessidade':'Pessoas faltantes para a meta'}</small></div>`;
+    const metaText=target?` Para a meta de ${formatDate(target)}, seriam necessárias aproximadamente ${requiredPeople===null?'—':requiredPeople.toFixed(1).replace('.',',')} pessoas. Com ${people} disponíveis, ${teamDelta>=0?'há folga estimada de '+teamDelta.toFixed(1).replace('.',',')+' pessoas':'faltam aproximadamente '+Math.abs(teamDelta).toFixed(1).replace('.',',')+' pessoas'}.`:'';
+    document.getElementById('qtySimNarrative').textContent=`O saldo dos quantitativos representa ${baseHH.toLocaleString('pt-BR',{maximumFractionDigits:0})} HH base pelos índices informados. Aplicando produtividade de ${(prod*100).toFixed(1).replace('.',',')}%, a necessidade real estimada é de ${realHH.toLocaleString('pt-BR',{maximumFractionDigits:0})} HH. Com ${people} pessoas, jornada de ${hours.toFixed(1).replace('.',',')} h/dia e ${daysWeek} dias por semana, a tendência de término é ${formatDate(finish)}.${metaText}`;
+    save();
+  }
+  function loadDefaults(force=false){
+    const project=currentProject(),m=currentMetrics();if(!force&&loadedProject===project.id){calculate();return;}loadedProject=project.id;
+    let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey(project.id))||'{}')}catch{}
+    document.getElementById('qtyProdMode').value=saved.mode||'current';
+    document.getElementById('qtyProdManual').value=saved.manual||Math.max(1,(m.hh.productivity*100||100).toFixed(1));
+    document.getElementById('qtyPeople').value=saved.people||num(document.getElementById('simPeople')?.value)||96;
+    document.getElementById('qtyHoursDay').value=saved.hours||num(document.getElementById('simHoursDay')?.value)||9;
+    document.getElementById('qtyDaysWeek').value=String(saved.days||Number(document.getElementById('simDaysWeek')?.value)||6);
+    document.getElementById('qtyTargetDate').value=saved.target||document.getElementById('simTargetDate')?.value||dateInputValue(m.contractEnd);
+    renderRows(saved.items?.length?saved.items:[{service:'Serviço / disciplina',unit:'un',total:100,executed:0,index:1}]);
+  }
+  function copyTeam(){document.getElementById('qtyPeople').value=document.getElementById('simPeople')?.value||96;document.getElementById('qtyHoursDay').value=document.getElementById('simHoursDay')?.value||9;document.getElementById('qtyDaysWeek').value=document.getElementById('simDaysWeek')?.value||6;document.getElementById('qtyTargetDate').value=document.getElementById('simTargetDate')?.value||'';calculate();}
+
+  document.getElementById('qtyAddItem').addEventListener('click',()=>{const items=collectRows();items.push({service:'',unit:'un',total:0,executed:0,index:0});renderRows(items);});
+  document.getElementById('qtyCopyTeam').addEventListener('click',copyTeam);
+  ['qtyProdMode','qtyProdManual','qtyPeople','qtyHoursDay','qtyDaysWeek','qtyTargetDate'].forEach(id=>{const el=document.getElementById(id);el?.addEventListener(id==='qtyProdMode'||id==='qtyDaysWeek'?'change':'input',calculate)});
+  document.getElementById('simProjectSelector')?.addEventListener('change',()=>setTimeout(()=>loadDefaults(true),0));
+  loadDefaults(true);
+})();
