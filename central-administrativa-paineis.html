@@ -17,7 +17,7 @@
       const response=await fetch('./central-administrativa-paineis-base.html?v=20260906-qtyreal2',{cache:'no-cache'});
       if(!response.ok)throw new Error('Falha ao carregar base da central');
       let html=await response.text();
-      const addon='<script src="./central-quantitativos-real.js?v=20260906-qtyreal2"></scr'+'ipt>';
+      const addon='<script src="./central-quantitativos-real.js?v=20260906-qtyreal3"></scr'+'ipt>';
       html=html.replace('</body>',addon+'</body>');
       document.open();document.write(html);document.close();
     }catch(error){
