@@ -1,0 +1,133 @@
+name: Fix Arcelor Portfolio Summary
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/fix-arcelor-portfolio.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch Arcelor summary integration
+        shell: python
+        run: |
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''    const prodEl = document.getElementById(`${id}-prod`);
+              const prodBox = document.getElementById(`${id}-prod-box`);
+              prodEl.innerText = Number(prodAcm || 0).toFixed(1) + "%";
+
+              if ((prodAcm || 0) < 100) {
+                  prodEl.className = "text-sm font-black text-red-600";
+                  prodBox.style.borderLeftColor = "#ef4444";
+              } else {
+                  prodEl.className = "text-sm font-black text-green-600";
+                  prodBox.style.borderLeftColor = "#10b981";
+              }
+          '''
+          new = '''    const prodEl = document.getElementById(`${id}-prod`);
+              const prodBox = document.getElementById(`${id}-prod-box`);
+              const produtividadeDisponivel = prodAcm !== null && prodAcm !== undefined && Number.isFinite(Number(prodAcm));
+
+              if (!produtividadeDisponivel) {
+                  prodEl.innerText = "–";
+                  prodEl.className = "text-sm font-black text-slate-400";
+                  prodBox.style.borderLeftColor = "#94a3b8";
+              } else {
+                  const produtividadeNumero = Number(prodAcm);
+                  prodEl.innerText = produtividadeNumero.toFixed(1) + "%";
+                  if (produtividadeNumero < 100) {
+                      prodEl.className = "text-sm font-black text-red-600";
+                      prodBox.style.borderLeftColor = "#ef4444";
+                  } else {
+                      prodEl.className = "text-sm font-black text-green-600";
+                      prodBox.style.borderLeftColor = "#10b981";
+                  }
+              }
+          '''
+          if old not in s:
+              raise SystemExit('Trecho de produtividade não encontrado')
+          s = s.replace(old, new, 1)
+
+          old = '''        let hhAgregadoTotal = 0;
+                  let hhRealTotal = 0;
+                  let temCurva = false;
+          '''
+          new = '''        let hhAgregadoTotal = 0;
+                  let hhRealTotal = 0;
+                  let temCurva = false;
+                  const projetoArcelor = id === 'regenerador' || id === 'forno-panela';
+                  const avancosComCurva = [];
+          '''
+          if old not in s:
+              raise SystemExit('Inicialização do resumo multidisciplinar não encontrada')
+          s = s.replace(old, new, 1)
+
+          old = '''            if (curva.length) {
+                      temCurva = true;
+                      hhContratoComCurva += hhContratoDisc;
+                      hhAgregadoTotal += avancoRealDisc * hhContratoDisc;
+                  }
+          '''
+          new = '''            if (curva.length) {
+                      temCurva = true;
+                      avancosComCurva.push(avancoRealDisc);
+                      hhContratoComCurva += hhContratoDisc;
+                      hhAgregadoTotal += avancoRealDisc * hhContratoDisc;
+                  }
+          '''
+          if old not in s:
+              raise SystemExit('Acúmulo por disciplina não encontrado')
+          s = s.replace(old, new, 1)
+
+          old = '''        const contratoBase = hhContratoTotal || hhContratoComCurva || Number(cfg.hh) || 0;
+                  const avancoProjeto = contratoBase > 0 ? hhAgregadoTotal / contratoBase : 0;
+                  const produtividade = hhRealTotal > 0 ? (hhAgregadoTotal / hhRealTotal) * 100 : 0;
+          '''
+          new = '''        const contratoBase = hhContratoTotal || hhContratoComCurva || Number(cfg.hh) || 0;
+                  const possuiPesoHHValido = hhContratoComCurva > 0;
+                  const avancoMedioSemHH = avancosComCurva.length
+                      ? avancosComCurva.reduce((soma, valor) => soma + valor, 0) / avancosComCurva.length
+                      : 0;
+                  // Arcelor ainda não possui HH contratual por disciplina preenchido no Firebase.
+                  // Nessa condição, replica o Painel Geral usando peso uniforme entre as disciplinas com curva.
+                  const avancoProjeto = possuiPesoHHValido && contratoBase > 0
+                      ? hhAgregadoTotal / contratoBase
+                      : (projetoArcelor ? avancoMedioSemHH : 0);
+                  // Sem HH Real e sem peso HH válido não existe base para produtividade: exibe "–" em vez de 0%.
+                  const produtividade = hhRealTotal > 0 && possuiPesoHHValido
+                      ? (hhAgregadoTotal / hhRealTotal) * 100
+                      : (projetoArcelor ? null : 0);
+          '''
+          if old not in s:
+              raise SystemExit('Cálculo final do resumo multidisciplinar não encontrado')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8')
+
+      - name: Validate patch
+        shell: bash
+        run: |
+          grep -q "const projetoArcelor = id === 'regenerador' || id === 'forno-panela';" index.html
+          grep -q 'const avancoMedioSemHH' index.html
+          grep -q 'prodEl.innerText = "–";' index.html
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Corrige avanço e produtividade dos painéis Arcelor"
+          git push origin main
