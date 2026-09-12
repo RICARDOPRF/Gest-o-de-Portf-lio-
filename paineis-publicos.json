@@ -1,9 +1,41 @@
 {
-  "version": "2026-09-12",
+  "version": "2026-09-12.2",
   "source": "Gestão de Obras | KAEFER Teckma",
   "managementUrl": "https://ricardoprf.github.io/Gest-o-de-Portf-lio-/",
   "githubOwner": "RICARDOPRF",
   "panels": [
+    {
+      "id": "fs-cnp",
+      "name": "FS Fueling Sustainability – Projeto SPCI - CNP",
+      "short": "FS CNP · SPCI",
+      "url": "https://ricardoprf.github.io/Painel-de-Bordo-FS-CNP-SPCI/",
+      "repo": "RICARDOPRF/Painel-de-Bordo-FS-CNP-SPCI",
+      "aliases": ["fs cnp", "spci", "spci cnp", "painel spci", "painel cnp spci", "painel de bordo spci"]
+    },
+    {
+      "id": "fs-cnp-etanol",
+      "name": "FS Fueling Sustainability – Projeto Etanol - CNP",
+      "short": "FS CNP · Etanol",
+      "url": "https://ricardoprf.github.io/Painel-de-Bordo-FS-CNP-Etanol/",
+      "repo": "RICARDOPRF/Painel-de-Bordo-FS-CNP-Etanol",
+      "aliases": ["etanol cnp", "fs cnp etanol", "painel etanol", "painel de bordo etanol"]
+    },
+    {
+      "id": "fs-cnp-utilidades",
+      "name": "FS Fueling Sustainability – Projeto Utilidades - CNP",
+      "short": "FS CNP · Utilidades",
+      "url": "https://ricardoprf.github.io/Painel-de-Bordo-FS-CNP-UTI/",
+      "repo": "RICARDOPRF/Painel-de-Bordo-FS-CNP-UTI",
+      "aliases": ["utilidades cnp", "fs cnp utilidades", "painel utilidades", "painel de bordo utilidades"]
+    },
+    {
+      "id": "andritz",
+      "name": "Klabin Linha 07 – Andritz",
+      "short": "Klabin · Andritz",
+      "url": "https://ricardoprf.github.io/Painel-de-Bordo-Andritz/",
+      "repo": "RICARDOPRF/Painel-de-Bordo-Andritz",
+      "aliases": ["andritz", "klabin andritz", "linha 07", "painel andritz", "painel de bordo andritz"]
+    },
     {
       "id": "beccs",
       "name": "FS Fueling Sustainability – Projeto BECCS",
@@ -11,6 +43,22 @@
       "url": "https://ricardoprf.github.io/Painel-de-Bordo-FS-Beccs./",
       "repo": "RICARDOPRF/Painel-de-Bordo-FS-Beccs.",
       "aliases": ["beccs", "fs beccs", "painel beccs", "painel do beccs", "painel de bordo beccs", "painel de bordo do beccs", "projeto beccs"]
+    },
+    {
+      "id": "nouryon-clo2",
+      "name": "Nouryon – Dióxido de Cloro",
+      "short": "Nouryon · ClO₂",
+      "url": "https://ricardoprf.github.io/Painel-de-bordo-Nouryon-Dioxido-de-Cloro/",
+      "repo": "RICARDOPRF/Painel-de-bordo-Nouryon-Dioxido-de-Cloro",
+      "aliases": ["nouryon dioxido de cloro", "dioxido de cloro", "clo2", "painel nouryon clo2", "painel dioxido"]
+    },
+    {
+      "id": "nouryon-clorato",
+      "name": "Nouryon – Clorato",
+      "short": "Nouryon · Clorato",
+      "url": "https://ricardoprf.github.io/Painel-de-bordo-Nouryon-Clorato/",
+      "repo": "RICARDOPRF/Painel-de-bordo-Nouryon-Clorato",
+      "aliases": ["nouryon clorato", "clorato", "painel clorato", "painel de bordo clorato"]
     },
     {
       "id": "regenerador",
