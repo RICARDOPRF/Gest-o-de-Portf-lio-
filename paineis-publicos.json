@@ -1,0 +1,32 @@
+{
+  "version": "2026-09-12",
+  "source": "Gestão de Obras | KAEFER Teckma",
+  "managementUrl": "https://ricardoprf.github.io/Gest-o-de-Portf-lio-/",
+  "githubOwner": "RICARDOPRF",
+  "panels": [
+    {
+      "id": "beccs",
+      "name": "FS Fueling Sustainability – Projeto BECCS",
+      "short": "FS · BECCS",
+      "url": "https://ricardoprf.github.io/Painel-de-Bordo-FS-Beccs./",
+      "repo": "RICARDOPRF/Painel-de-Bordo-FS-Beccs.",
+      "aliases": ["beccs", "fs beccs", "painel beccs", "painel do beccs", "painel de bordo beccs", "painel de bordo do beccs", "projeto beccs"]
+    },
+    {
+      "id": "regenerador",
+      "name": "ArcelorMittal – Regenerador",
+      "short": "ArcelorMittal · Regenerador",
+      "url": "https://ricardoprf.github.io/Painel-de-bordo-Regenerador-/",
+      "repo": "RICARDOPRF/Painel-de-bordo-Regenerador-",
+      "aliases": ["regenerador", "painel regenerador", "painel do regenerador", "painel de bordo regenerador", "painel de bordo do regenerador", "arcelor regenerador"]
+    },
+    {
+      "id": "forno-panela",
+      "name": "ArcelorMittal – Forno Panela",
+      "short": "ArcelorMittal · Forno Panela",
+      "url": "https://ricardoprf.github.io/Painel-de-bordo-Forno-Panela.12/",
+      "repo": "RICARDOPRF/Painel-de-bordo-Forno-Panela.12",
+      "aliases": ["forno panela", "forno-panela", "painel forno panela", "painel do forno panela", "painel de bordo forno panela", "painel de bordo do forno panela", "arcelor forno panela", "forno"]
+    }
+  ]
+}
